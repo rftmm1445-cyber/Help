@@ -1,0 +1,108 @@
+﻿
+@model WebApplication4.Models.Continent
+@{
+    ViewData["Title"] = "تعديل بيانات القارة";
+}
+
+<div class="container mt-5">
+    <div class="card shadow-lg border-0 rounded-5 mx-auto p-4 dark-card" style="max-width: 800px;">
+        <div class="card-header text-center py-4 rounded-top-4 dark-header">
+            🌍 تعديل بيانات القارة
+        </div>
+
+        <div class="card-body">
+            <form asp-action="DoUpdateContinent" asp-controller="Home" method="post" enctype="multipart/form-data">
+                <input type="hidden" asp-for="Id" />
+                <input type="hidden" asp-for="PhotoUrl" />
+
+                <!-- اسم القارة -->
+                <div class="mb-4">
+                    <label for="Name" class="form-label fw-bold text-light">اسم القارة:</label>
+                    <input type="text" id="Name" name="Name" asp-for="Name" class="form-control form-control-lg shadow-sm dark-input" required />
+                </div>
+
+                <div class="row">
+                    <!-- عدد الدول -->
+                    <div class="col-md-6 mb-4">
+                        <label for="CountryCount" class="form-label fw-bold text-light">عدد الدول:</label>
+                        <input type="number" id="CountryCount" name="CountryCount" asp-for="CountryCount" class="form-control form-control-lg shadow-sm dark-input" min="0" required />
+                    </div>
+
+                    <!-- المساحة -->
+                    <div class="col-md-6 mb-4">
+                        <label for="Area" class="form-label fw-bold text-light">المساحة (كم²):</label>
+                        <input type="number" step="0.01" id="Area" name="Area" asp-for="Area" class="form-control form-control-lg shadow-sm dark-input" min="0" required />
+                    </div>
+                </div>
+
+                <!-- عدد السكان -->
+                <div class="mb-4">
+                    <label for="Population" class="form-label fw-bold text-light">عدد السكان:</label>
+                    <input type="number" id="Population" name="Population" asp-for="Population" class="form-control form-control-lg shadow-sm dark-input" min="0" required />
+                </div>
+
+                <!-- الوصف -->
+                <div class="mb-4">
+                    <label for="Description" class="form-label fw-bold text-light">وصف القارة:</label>
+                    <textarea id="Description" name="Description" asp-for="Description" rows="5" class="form-control form-control-lg shadow-sm dark-input"></textarea>
+                </div>
+
+                <!-- الصورة -->
+                <div class="mb-4">
+                    <img src="~/@Model.PhotoUrl" width="200" class="mb-2" />
+                    <label for="Continent_Photo_File" class="form-label fw-bold text-light">تغيير صورة القارة:</label>
+                    <input type="file" id="Continent_Photo_File" name="Continent_Photo_File" class="form-control form-control-lg shadow-sm dark-input" accept="image/*" />
+                </div>
+
+                <!-- هل مأهولة -->
+                <div class="form-check form-switch mb-4 text-end">
+                    <input type="checkbox" id="IsInhabited" name="IsInhabited" asp-for="IsInhabited" class="form-check-input" />
+                    <label for="IsInhabited" class="form-check-label fw-bold text-light">مأهولة بالسكان</label>
+                </div>
+
+                <!-- زر الحفظ -->
+                <div class="text-center">
+                    <button type="submit" class="btn btn-save btn-lg px-5 py-2 shadow-sm">💾 حفظ التعديلات</button>
+                    <a href="@Url.Action("Index", "Home")" class="btn btn-cancel btn-lg ms-3 shadow-sm">🔙 العودة للقائمة</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+    .dark-card {
+        background-color: rgba(0,0,50,0.85);
+        border-radius: 15px;
+    }
+
+    .dark-header {
+        background: linear-gradient(135deg, #6610f2, #0d6efd);
+        color: #fff;
+        font-size: 1.5rem;
+        font-weight: bold;
+    }
+
+    .dark-input {
+        background-color: rgba(255,255,255,0.05);
+        border: 1px solid rgba(255,255,255,0.3);
+        color: #fff;
+    }
+
+        .dark-input::placeholder {
+            color: rgba(255,255,255,0.6);
+        }
+
+    .btn-save {
+        background: linear-gradient(45deg, #0dcaf0, #198754);
+        color: #fff;
+        font-weight: bold;
+        border-radius: 50px;
+    }
+
+    .btn-cancel {
+        background: linear-gradient(45deg, #ffc107, #fd7e14);
+        color: #fff;
+        font-weight: bold;
+        border-radius: 50px;
+    }

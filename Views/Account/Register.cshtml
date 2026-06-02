@@ -1,0 +1,41 @@
+﻿@{
+    ViewData["Title"] = "إنشاء حساب جديد";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-5">
+            <div class="card p-4 border-0 shadow rounded-4 text-white" style="background-color: #162447;">
+                <div class="text-center mb-4">
+                    <h2 class="fw-bold text-success">📝 لاعب جديد</h2>
+                    <p class="text-muted">سجل حسابك الآن لتبدأ تجميع النقاط واكتشاف الخريطة</p>
+                </div>
+
+                @if (ViewBag.Error != null)
+                {
+                    <div class="alert alert-danger text-center py-2">@ViewBag.Error</div>
+                }
+
+                <form asp-action="Register" method="post">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-light">اسم المستخدم</label>
+                        <input type="text" name="username" class="form-control bg-dark text-white border-secondary" required placeholder="اختر اسم حساب فريد..." />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-light">البريد الإلكتروني</label>
+                        <input type="email" name="email" class="form-control bg-dark text-white border-secondary" required placeholder="example@mail.com" />
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label fw-bold text-light">كلمة المرور</label>
+                        <input type="password" name="password" class="form-control bg-dark text-white border-secondary" required placeholder="اختر كلمة مرور قوية..." />
+                    </div>
+                    <button type="submit" class="btn btn-success w-100 fw-bold py-2 rounded-3 shadow mb-3">إنشاء الحساب وبدء اللعب 🎮</button>
+                </form>
+
+                <div class="text-center mt-2">
+                    <p class="mb-0 text-muted">لديك حساب بالفعل؟ <a asp-action="Login" class="text-info fw-bold text-decoration-none">تسجيل الدخول من هنا</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,85 @@
+﻿@* @model WebApplication4.Models.Player
+@{
+    ViewData["Title"] = "جولة اللعب";
+}
+
+<div class="container mt-5 text-white">
+    <div class="row g-4">
+        <div class="col-md-4">
+            <div class="card p-4 text-center border-0 shadow rounded-4" style="background-color: #162447;">
+                <h4 class="text-warning fw-bold mb-3">🎮 حالة اللاعب الحالية</h4>
+                <h5 class="mb-2">اللاعب: <span class="text-info">@Model.Username</span></h5>
+                <hr class="border-secondary" />
+                <p class="fs-5">⚡ النقاط الحالية: <span id="currentScore" class="fw-bold text-warning">@Model.Score</span></p>
+                <p class="fs-5">💠 المستوى الحالي: <span id="currentLevel" class="fw-bold text-success">@Model.pLevel</span></p>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            <div class="card p-4 border-0 shadow rounded-4" style="background-color: #162447;">
+                <h3 class="fw-bold mb-4 border-bottom pb-2">🗺️ خريطة جولة اللعب الجغرافية</h3>
+
+                <div class="p-5 bg-dark rounded-3 text-center mb-4 border border-secondary">
+                    <p class="text-muted mb-1">الموقع المستهدف المخفي في هذه الجولة:</p>
+                    <h5 class="text-light" id="targetLocation">برج إيفل، باريس، فرنسا</h5>
+                </div>
+
+                <div class="mb-4 text-center">
+                    <h5 class="text-warning mb-3"><i class="fa-solid fa-lightbulb"></i> اطلب تلميحاً ذكياً من الـ AI (-10 نقاط)</h5>
+                    <div class="d-flex justify-content-center gap-2">
+                        <button class="btn btn-outline-info fw-bold px-3" onclick="requestHint('تاريخ')">📜 تلميح تاريخي</button>
+                        <button class="btn btn-outline-success fw-bold px-3" onclick="requestHint('رياضة')">⚽ تلميح رياضي</button>
+                        <button class="btn btn-outline-danger fw-bold px-3" onclick="requestHint('موسيقى')">🎵 تلميح موسيقي</button>
+                    </div>
+                </div>
+
+                <div id="hintBox" class="alert alert-info border-info d-none rounded-3 text-dark fw-bold mb-4">
+                    <strong>💡 التلميح: </strong> <span id="hintText"></span>
+                </div>
+
+                <button class="btn btn-warning w-100 btn-lg fw-bold py-3 text-dark rounded-3 shadow" onclick="triggerWin()">
+                    🎯 لقد وجدت الموقع الصحيح على الخريطة! (احصل على الجائزة +50 نقطة)
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    // أولاً: دالة جلب التلميح الذكي والخصم الفوري
+    function requestHint(selectedCategory) {
+        var location = $("#targetLocation").text();
+
+        $.post("/Gameround/GetAiHint", { category: selectedCategory, targetLocation: location }, function(data) {
+            if (data.success) {
+                // فك الـ JSON الداخلي المستلم من الـ AI
+                var parsedAi = JSON.parse(data.aiResponse);
+
+                // عرض التلميح في الصندوق
+                $("#hintText").text(parsedAi.hint);
+                $("#hintBox").removeClass("d-none");
+
+                // تحديث العدادات على الشاشة فوراً
+                $("#currentScore").text(data.newScore);
+                $("#currentLevel").text(data.newLevel);
+            } else {
+                alert(data.message);
+            }
+        });
+    }
+
+    // ثانياً: دالة الفوز وإضافة نقاط الجائزة وترقية الليفل بالتلائم
+    function triggerWin() {
+        $.post("/Gameround/ClaimReward", function(data) {
+            if (data.success) {
+                // تحديث الشاشة بالنقاط والليفل الجديد بعد الفوز
+                $("#currentScore").text(data.newScore);
+                $("#currentLevel").text(data.newLevel);
+
+                alert("🎉 مبروك! تم إضافة 50 نقطة لرصيدك وتحديث مستواك بالتلائم!");
+                $("#hintBox").addClass("d-none"); // إخفاء التلميح القديم للجولة القادمة
+            }
+        });
+    }
+</script> *@

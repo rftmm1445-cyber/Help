@@ -1,0 +1,146 @@
+﻿@model WebApplication4.Models.Continent
+@{
+    ViewData["Title"] = "إضافة قارة جديدة";
+}
+
+<div class="container mt-5">
+    <div class="card shadow-lg border-0 rounded-5 mx-auto p-4 dark-card" style="max-width: 800px;">
+        <div class="card-header text-center py-4 rounded-top-4 dark-header">
+            🌍 إضافة قارة جديدة
+        </div>
+
+        <div class="card-body">
+            <!-- رسالة النجاح -->
+            @if (ViewBag.Success != null)
+            {
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    @ViewBag.Success
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            }
+
+            <form asp-action="DoAddNewContinent" asp-controller="Home" method="post" enctype="multipart/form-data">
+                <!-- جميع الحقول كما هي بدون تغيير -->
+                <div class="mb-4">
+                    <label for="Name" class="form-label fw-bold text-light">اسم القارة:</label>
+                    <input type="text" id="Name" name="Name" asp-for="Name" class="form-control form-control-lg shadow-sm dark-input" placeholder="مثل: أوروبا" required />
+                    <div class="form-text text-light">أدخل اسم القارة الذي تريد إضافته.</div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-4">
+                        <label for="CountryCount" class="form-label fw-bold text-light">عدد الدول:</label>
+                        <input type="number" id="CountryCount" name="CountryCount" asp-for="CountryCount" class="form-control form-control-lg shadow-sm dark-input" min="0" required />
+                        <div class="form-text text-light">كم دولة توجد في هذه القارة؟</div>
+                    </div>
+
+                    <div class="col-md-6 mb-4">
+                        <label for="Area" class="form-label fw-bold text-light">المساحة (كم²):</label>
+                        <input type="number" step="0.01" id="Area" name="Area" asp-for="Area" class="form-control form-control-lg shadow-sm dark-input" min="0" required />
+                        <div class="form-text text-light">أدخل المساحة الإجمالية للقارة بالكيلومتر المربع.</div>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label for="Population" class="form-label fw-bold text-light">عدد السكان:</label>
+                    <input type="number" id="Population" name="Population" asp-for="Population" class="form-control form-control-lg shadow-sm dark-input" min="0" required />
+                    <div class="form-text text-light">أدخل العدد التقريبي لسكان هذه القارة.</div>
+                </div>
+
+                <div class="mb-4">
+                    <label for="Description" class="form-label fw-bold text-light">وصف القارة:</label>
+                    <textarea id="Description" name="Description" asp-for="Description" rows="5" class="form-control form-control-lg shadow-sm dark-input" placeholder="اكتب معلومات عن القارة..."></textarea>
+                    <div class="form-text text-light">يمكنك كتابة معلومات إضافية مثل المعالم، المناخ، أو أي تفاصيل أخرى.</div>
+                </div>
+
+                <div class="mb-4">
+                    <label for="Continent_Photo_File" class="form-label fw-bold text-light">صورة القارة:</label>
+                    <input type="file" id="Continent_Photo_File" name="Continent_Photo_File" class="form-control form-control-lg shadow-sm dark-input" accept="image/*" />
+                    <div class="form-text text-light">اختر صورة تمثل القارة (jpg, png, gif).</div>
+                </div>
+
+                <div class="form-check form-switch mb-4 text-end">
+                    <input type="checkbox" id="IsInhabited" name="IsInhabited" asp-for="IsInhabited" class="form-check-input" />
+                    <label for="IsInhabited" class="form-check-label fw-bold text-light">مأهولة بالسكان</label>
+                    <div class="form-text text-light">حدد هذا الخيار إذا كانت القارة مأهولة بالسكان.</div>
+                </div>
+
+                <div class="text-center">
+                    <button type="submit" class="btn btn-save btn-lg px-5 py-2 shadow-sm">💾 حفظ القارة</button>
+                    <a href="@Url.Action("Index", "Home")" class="btn btn-cancel btn-lg ms-3 shadow-sm">🔙 العودة</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- حافظنا على نفس التصميم و الألوان -->
+<style>
+    .dark-card {
+        background: linear-gradient(rgba(0,0,50,0.85), rgba(0,0,80,0.85)), url('/Photo/europe-blur.jpg');
+        background-size: cover;
+        background-position: center;
+        color: #fff;
+    }
+
+    .dark-header {
+        background: linear-gradient(135deg, #6610f2, #0d6efd);
+        color: #fff;
+        font-size: 1.5rem;
+        font-weight: bold;
+    }
+
+    .dark-input {
+        background-color: rgba(255,255,255,0.05);
+        border: 1px solid rgba(255,255,255,0.3);
+        color: #fff;
+    }
+
+        .dark-input::placeholder {
+            color: rgba(255,255,255,0.6);
+        }
+
+    .form-text {
+        font-size: 0.9rem;
+    }
+
+    .btn-save {
+        background: linear-gradient(45deg, #0dcaf0, #198754);
+        color: #fff;
+        font-weight: bold;
+        border-radius: 50px;
+        transition: all 0.3s;
+    }
+
+        .btn-save:hover {
+            transform: translateY(-3px);
+            filter: brightness(1.1);
+        }
+
+        .btn-save:active {
+            transform: translateY(0);
+            filter: brightness(0.9);
+        }
+
+    .btn-cancel {
+        background: linear-gradient(45deg, #ffc107, #fd7e14);
+        color: #fff;
+        font-weight: bold;
+        border-radius: 50px;
+        transition: all 0.3s;
+    }
+
+        .btn-cancel:hover {
+            transform: translateY(-3px);
+            filter: brightness(1.1);
+        }
+
+        .btn-cancel:active {
+            transform: translateY(0);
+            filter: brightness(0.9);
+        }
+
+    .shadow-sm {
+        box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.3) !important;
+    }
+</style>

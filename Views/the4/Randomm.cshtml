@@ -1,0 +1,413 @@
+﻿
+@{
+    // ViewData["Title"] = "GeoGuessr Lite - لعبة تخمين";
+    // Player currentPlayer = ViewBag.CurrentPlayer as WebApplication4.Models.Player;
+   // int x = 20;
+}
+
+<style>
+    html, body {
+        -- margin: 0;
+        padding: 0;
+        height: 100%;
+        width: 100%;
+        overflow: hidden;
+        font-family: Arial, sans-serif;
+    }
+
+    #streetViewFrame {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        border: 0;
+        z-index: 1;
+    }
+
+    #controls {
+        position: fixed;
+        top: 10px;
+        left: 10px;
+        background: rgba(255,255,255,0.9);
+        padding: 10px;
+        border-radius: 5px;
+        z-index: 1000;
+    }
+
+        #controls button, #controls select {
+            margin-top: 5px;
+            width: 150px;
+        }
+
+    #miniMap {
+        position: fixed;
+        bottom: 10px;
+        right: 10px;
+        width: 300px;
+        height: 200px;
+        border: 2px solid #333;
+        z-index: 1000;
+        background: white;
+        transition: width 0.3s ease, height 0.3s ease, bottom 0.3s ease, right 0.3s ease, box-shadow 0.3s ease;
+        transform-origin: bottom right;
+    }
+
+        #miniMap:hover {
+            width: 600px;
+            height: 400px;
+            bottom: 20px;
+            right: 20px;
+            box-shadow: 0 12px 30px rgba(0,0,0,0.45);
+        }
+
+    #timer, #points, #totalPoints {
+        font-weight: bold;
+        margin-top: 5px;
+    }
+
+    #timer {
+        color: #333;
+    }
+
+    #points {
+        color: green;
+    }
+
+    #totalPoints {
+        color: blue;
+    }
+</style>
+
+<div id="controls">
+    <label>
+        @if (ViewBag.CurrentPlayer!= null)
+        {
+            <p>مرحباً، @ViewBag.CurrentPlayer.Username</p>
+        }
+        اختر مستوى الصعوبة:
+        <select id="difficulty">
+            <option value="easy">سهل</option>
+            <option value="medium">متوسط</option>
+            <option value="hard">صعب</option>
+        </select>
+    </label>
+    <br>
+    <button onclick="startRound()" id="startBtn">ابدأ الجولة</button>
+    <button onclick="checkGuess()" id="checkBtn">تحقق من التخمين</button>
+    <button onclick="endgame()" id="checkBtn">انهاء اللعبة</button>
+    <div id="timer">الوقت المتبقي: 60</div>
+    <div id="points"></div>
+    <div id="totalPoints">النقاط الكلية: 0</div>
+</div>
+
+<iframe id="streetViewFrame" allowfullscreen loading="lazy"></iframe>
+<div id="miniMap"></div>
+
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+
+<script>
+    // ======== الدوال المساعدة ========
+    function getRandomCoordinate(min, max) {
+        return (Math.random() * (max - min) + min).toFixed(6);
+    }
+
+    function deg2rad(deg) { return deg * (Math.PI/180); }
+    function getDistanceFromLatLonInKm(lat1, lon1, lat2, lon2) {
+        const R = 6371;
+        const dLat = deg2rad(lat2 - lat1);
+        const dLon = deg2rad(lon2 - lon1);
+        const a =
+            Math.sin(dLat/2)**2 +
+            Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) * Math.sin(dLon/2)**2;
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        return R * c;
+    }
+    function calculatePoints(distanceKm) { return Math.max(0, Math.round(5000 - distanceKm * 10)); }
+
+    // ======== المدن حسب المستوى ========
+    const allAreas = {
+      easy: [
+        {name:"New York",latMin:40.55,latMax:40.92,lngMin:-74.25,lngMax:-73.70},
+        {name:"Paris",latMin:48.81,latMax:48.91,lngMin:2.25,lngMax:2.42},
+        {name:"London",latMin:51.48,latMax:51.56,lngMin:-0.13,lngMax:-0.05},
+        {name:"Tokyo",latMin:35.60,latMax:35.73,lngMin:139.65,lngMax:139.85},
+        {name:"Cairo",latMin:30.00,latMax:30.10,lngMin:31.20,lngMax:31.35},
+        {name:"Los Angeles",latMin:34.00,latMax:34.15,lngMin:-118.45,lngMax:-118.20},
+        {name:"Rome",latMin:41.88,latMax:41.94,lngMin:12.45,lngMax:12.55},
+        {name:"Barcelona",latMin:41.36,latMax:41.45,lngMin:2.10,lngMax:2.20},
+        {name:"Moscow",latMin:55.70,latMax:55.85,lngMin:37.55,lngMax:37.75},
+        {name:"Dubai",latMin:25.20,latMax:25.30,lngMin:55.25,lngMax:55.35},
+
+        {name:"Chicago",latMin:41.83,latMax:41.92,lngMin:-87.75,lngMax:-87.60},
+        {name:"Miami",latMin:25.72,latMax:25.82,lngMin:-80.30,lngMax:-80.15},
+        {name:"Madrid",latMin:40.38,latMax:40.45,lngMin:-3.75,lngMax:-3.65},
+        {name:"Athens",latMin:37.95,latMax:38.05,lngMin:23.68,lngMax:23.78},
+        {name:"Vienna",latMin:48.18,latMax:48.25,lngMin:16.30,lngMax:16.42},
+        {name:"Prague",latMin:50.05,latMax:50.12,lngMin:14.38,lngMax:14.48},
+        {name:"Budapest",latMin:47.46,latMax:47.53,lngMin:19.02,lngMax:19.12},
+        {name:"Warsaw",latMin:52.20,latMax:52.28,lngMin:20.95,lngMax:21.08},
+        {name:"Seoul",latMin:37.50,latMax:37.60,lngMin:126.90,lngMax:127.10},
+        {name:"Beijing",latMin:39.85,latMax:39.98,lngMin:116.30,lngMax:116.45},
+        {name:"Shanghai",latMin:31.18,latMax:31.30,lngMin:121.40,lngMax:121.55},
+        {name:"Hong Kong",latMin:22.25,latMax:22.35,lngMin:114.10,lngMax:114.25},
+        {name:"Mexico City",latMin:19.35,latMax:19.48,lngMin:-99.20,lngMax:-99.05},
+        {name:"Buenos Aires",latMin:-34.65,latMax:-34.55,lngMin:-58.55,lngMax:-58.40},
+        {name:"Santiago",latMin:-33.50,latMax:-33.40,lngMin:-70.75,lngMax:-70.60},
+        {name:"Lima",latMin:-12.15,latMax:-12.00,lngMin:-77.10,lngMax:-76.95},
+        {name:"Johannesburg",latMin:-26.25,latMax:-26.10,lngMin:27.95,lngMax:28.10},
+        {name:"Doha",latMin:25.25,latMax:25.35,lngMin:51.45,lngMax:51.60},
+        {name:"Abu Dhabi",latMin:24.40,latMax:24.52,lngMin:54.30,lngMax:54.45},
+        {name:"Kuala Lumpur",latMin:3.08,latMax:3.20,lngMin:101.65,lngMax:101.75},
+        {name:"Jakarta",latMin:-6.30,latMax:-6.15,lngMin:106.75,lngMax:106.90},
+        {name:"Manila",latMin:14.52,latMax:14.65,lngMin:120.95,lngMax:121.08},
+        {name:"Delhi",latMin:28.55,latMax:28.75,lngMin:77.05,lngMax:77.30},
+        {name:"Mumbai",latMin:18.90,latMax:19.10,lngMin:72.78,lngMax:72.95},
+        {name:"Karachi",latMin:24.82,latMax:24.95,lngMin:66.95,lngMax:67.15},
+        {name:"Tel Aviv",latMin:32.03,latMax:32.12,lngMin:34.74,lngMax:34.85},
+        {name:"Jerusalem",latMin:31.72,latMax:31.82,lngMin:35.17,lngMax:35.27},
+        {name:"Riyadh",latMin:24.60,latMax:24.80,lngMin:46.60,lngMax:46.80},
+        {name:"Casablanca",latMin:33.50,latMax:33.65,lngMin:-7.70,lngMax:-7.50},
+        {name:"Marrakesh",latMin:31.58,latMax:31.70,lngMin:-8.05,lngMax:-7.90},
+        {name:"Stockholm",latMin:59.30,latMax:59.38,lngMin:18.00,lngMax:18.12},
+        {name:"Copenhagen",latMin:55.64,latMax:55.72,lngMin:12.50,lngMax:12.62},
+        {name:"Brussels",latMin:50.82,latMax:50.88,lngMin:4.30,lngMax:4.40},
+        {name:"Dublin",latMin:53.32,latMax:53.38,lngMin:-6.32,lngMax:-6.20},
+        {name:"Zurich",latMin:47.34,latMax:47.40,lngMin:8.48,lngMax:8.58},
+        {name:"Munich",latMin:48.10,latMax:48.18,lngMin:11.50,lngMax:11.65},
+        {name:"Milan",latMin:45.43,latMax:45.50,lngMin:9.15,lngMax:9.25},
+        {name:"Naples",latMin:40.80,latMax:40.90,lngMin:14.20,lngMax:14.32},
+        {name:"Venice",latMin:45.42,latMax:45.46,lngMin:12.28,lngMax:12.38},
+        {name:"Florence",latMin:43.75,latMax:43.80,lngMin:11.20,lngMax:11.30},
+        {name:"Valencia",latMin:39.43,latMax:39.50,lngMin:-0.42,lngMax:-0.32},
+        {name:"Seville",latMin:37.35,latMax:37.43,lngMin:-6.05,lngMax:-5.92},
+        {name:"Porto",latMin:41.12,latMax:41.18,lngMin:-8.68,lngMax:-8.55},
+        {name:"Nice",latMin:43.68,latMax:43.73,lngMin:7.22,lngMax:7.30},
+        {name:"Lyon",latMin:45.72,latMax:45.80,lngMin:4.78,lngMax:4.90},
+        {name:"Marseille",latMin:43.25,latMax:43.35,lngMin:5.30,lngMax:5.45},
+
+        {name:"Haifa",latMin:32.75,latMax:32.85,lngMin:34.95,lngMax:35.08},
+        {name:"Nazareth",latMin:32.68,latMax:32.73,lngMin:35.27,lngMax:35.33},
+        {name:"Eilat",latMin:29.52,latMax:29.58,lngMin:34.90,lngMax:34.98},
+        {name:"Beersheba",latMin:31.22,latMax:31.28,lngMin:34.75,lngMax:34.85},
+        {name:"Netanya",latMin:32.30,latMax:32.36,lngMin:34.82,lngMax:34.88},
+        {name:"Ashdod",latMin:31.77,latMax:31.84,lngMin:34.62,lngMax:34.70},
+        {name:"Amman",latMin:31.93,latMax:32.02,lngMin:35.85,lngMax:35.98},
+        {name:"Beirut",latMin:33.85,latMax:33.92,lngMin:35.45,lngMax:35.55},
+        {name:"Irbid",latMin:32.52,latMax:32.58,lngMin:35.82,lngMax:35.92},
+        {name:"Antalya",latMin:36.85,latMax:36.93,lngMin:30.65,lngMax:30.78}
+      ],
+             medium: [
+        {name:"Berlin",latMin:52.49,latMax:52.55,lngMin:13.35,lngMax:13.45},
+        {name:"Toronto",latMin:43.60,latMax:43.75,lngMin:-79.55,lngMax:-79.30},
+        {name:"Rio de Janeiro",latMin:-23.00,latMax:-22.80,lngMin:-43.30,lngMax:-43.15},
+        {name:"Singapore",latMin:1.35,latMax:1.37,lngMin:103.80,lngMax:103.85},
+        {name:"Istanbul",latMin:41.00,latMax:41.10,lngMin:28.95,lngMax:29.05},
+        {name:"Bangkok",latMin:13.70,latMax:13.80,lngMin:100.50,lngMax:100.55},
+        {name:"San Francisco",latMin:37.70,latMax:37.81,lngMin:-122.50,lngMax:-122.38},
+        {name:"Amsterdam",latMin:52.35,latMax:52.40,lngMin:4.87,lngMax:4.92},
+        {name:"Lisbon",latMin:38.70,latMax:38.75,lngMin:-9.15,lngMax:-9.10},
+        {name:"Havana",latMin:23.08,latMax:23.18,lngMin:-82.42,lngMax:-82.30},
+        {name:"Lagos",latMin:6.42,latMax:6.60,lngMin:3.20,lngMax:3.50},
+        {name:"Nairobi",latMin:-1.35,latMax:-1.20,lngMin:36.75,lngMax:36.90},
+        {name:"Accra",latMin:5.52,latMax:5.65,lngMin:-0.25,lngMax:-0.05},
+        {name:"Kiev",latMin:50.40,latMax:50.50,lngMin:30.45,lngMax:30.60},
+        {name:"Belgrade",latMin:44.78,latMax:44.85,lngMin:20.40,lngMax:20.55},
+        {name:"Bucharest",latMin:44.40,latMax:44.48,lngMin:26.00,lngMax:26.15},
+        {name:"Sofia",latMin:42.66,latMax:42.73,lngMin:23.28,lngMax:23.38},
+        {name:"Sarajevo",latMin:43.83,latMax:43.90,lngMin:18.32,lngMax:18.45},
+        {name:"Skopje",latMin:41.96,latMax:42.03,lngMin:21.38,lngMax:21.50},
+        {name:"Tunis",latMin:36.75,latMax:36.88,lngMin:10.10,lngMax:10.25},
+        {name:"Algiers",latMin:36.68,latMax:36.80,lngMin:3.00,lngMax:3.20},
+        {name:"Baghdad",latMin:33.25,latMax:33.40,lngMin:44.30,lngMax:44.50},
+        {name:"Tehran",latMin:35.60,latMax:35.78,lngMin:51.30,lngMax:51.50},
+        {name:"Kathmandu",latMin:27.65,latMax:27.75,lngMin:85.28,lngMax:85.38},
+        {name:"Hanoi",latMin:21.00,latMax:21.08,lngMin:105.78,lngMax:105.90},
+        {name:"Ho Chi Minh City",latMin:10.72,latMax:10.85,lngMin:106.60,lngMax:106.75},
+        {name:"Perth",latMin:-32.00,latMax:-31.85,lngMin:115.78,lngMax:115.92},
+        {name:"Melbourne",latMin:-37.90,latMax:-37.75,lngMin:144.85,lngMax:145.05},
+        {name:"Brisbane",latMin:-27.55,latMax:-27.40,lngMin:152.95,lngMax:153.10},
+        {name:"Vancouver",latMin:49.20,latMax:49.32,lngMin:-123.20,lngMax:-123.00},
+        {name:"Montreal",latMin:45.45,latMax:45.60,lngMin:-73.70,lngMax:-73.50},
+        {name:"Seattle",latMin:47.55,latMax:47.70,lngMin:-122.42,lngMax:-122.25},
+        {name:"Boston",latMin:42.30,latMax:42.40,lngMin:-71.15,lngMax:-70.98},
+        {name:"Philadelphia",latMin:39.90,latMax:40.05,lngMin:-75.25,lngMax:-75.05},
+        {name:"Houston",latMin:29.68,latMax:29.82,lngMin:-95.50,lngMax:-95.25},
+        {name:"Atlanta",latMin:33.68,latMax:33.82,lngMin:-84.48,lngMax:-84.30},
+        {name:"Phoenix",latMin:33.35,latMax:33.55,lngMin:-112.15,lngMax:-111.95},
+        {name:"Las Vegas",latMin:36.05,latMax:36.22,lngMin:-115.25,lngMax:-115.05},
+        {name:"Detroit",latMin:42.28,latMax:42.40,lngMin:-83.20,lngMax:-82.95},
+        {name:"Ankara",latMin:39.88,latMax:39.98,lngMin:32.75,lngMax:32.92},
+        {name:"Damascus",latMin:33.48,latMax:33.58,lngMin:36.20,lngMax:36.38},
+        {name:"Muscat",latMin:23.55,latMax:23.68,lngMin:58.35,lngMax:58.55},
+        {name:"Kuwait City",latMin:29.30,latMax:29.42,lngMin:47.88,lngMax:48.05},
+        {name:"Manama",latMin:26.18,latMax:26.25,lngMin:50.50,lngMax:50.62},
+        {name:"Chengdu",latMin:30.60,latMax:30.72,lngMin:104.00,lngMax:104.15},
+        {name:"Shenzhen",latMin:22.50,latMax:22.62,lngMin:113.88,lngMax:114.10},
+        {name:"Guangzhou",latMin:23.08,latMax:23.22,lngMin:113.18,lngMax:113.40},
+        {name:"Colombo",latMin:6.88,latMax:6.98,lngMin:79.82,lngMax:79.90},
+        {name:"Bangalore",latMin:12.90,latMax:13.05,lngMin:77.50,lngMax:77.68},
+        {name:"Chennai",latMin:13.00,latMax:13.15,lngMin:80.18,lngMax:80.32},
+        {name:"Calcutta",latMin:22.52,latMax:22.62,lngMin:88.30,lngMax:88.42},
+        {name:"Canberra",latMin:-35.35,latMax:-35.22,lngMin:149.05,lngMax:149.18},
+        {name:"Adelaide",latMin:-35.00,latMax:-34.88,lngMin:138.52,lngMax:138.68},
+        {name:"Calgary",latMin:51.00,latMax:51.10,lngMin:-114.18,lngMax:-113.95},
+        {name:"Ottawa",latMin:45.35,latMax:45.45,lngMin:-75.80,lngMax:-75.62},
+        {name:"Denver",latMin:39.68,latMax:39.80,lngMin:-105.10,lngMax:-104.88},
+        {name:"Charlotte",latMin:35.18,latMax:35.30,lngMin:-80.92,lngMax:-80.75},
+        {name:"Cleveland",latMin:41.45,latMax:41.55,lngMin:-81.78,lngMax:-81.60}
+      ],
+
+      hard: [
+        {name:"Sydney",latMin:-34.05,latMax:-33.85,lngMin:150.90,lngMax:151.25},
+        {name:"Cape Town",latMin:-34.05,latMax:-33.90,lngMin:18.35,lngMax:18.55},
+        {name:"Reykjavik",latMin:64.10,latMax:64.20,lngMin:-21.95,lngMax:-21.80},
+        {name:"Helsinki",latMin:60.15,latMax:60.20,lngMin:24.90,lngMax:25.05},
+        {name:"Oslo",latMin:59.90,latMax:60.00,lngMin:10.70,lngMax:10.80},
+        {name:"Auckland",latMin:-36.90,latMax:-36.80,lngMin:174.70,lngMax:174.80},
+        {name:"Tallinn",latMin:59.42,latMax:59.45,lngMin:24.72,lngMax:24.78},
+        {name:"Edinburgh",latMin:55.93,latMax:55.96,lngMin:-3.22,lngMax:-3.18},
+        {name:"Ulaanbaatar",latMin:47.88,latMax:47.98,lngMin:106.82,lngMax:106.98},
+        {name:"Tbilisi",latMin:41.66,latMax:41.75,lngMin:44.72,lngMax:44.88},
+        {name:"Yerevan",latMin:40.15,latMax:40.22,lngMin:44.45,lngMax:44.60},
+        {name:"Baku",latMin:40.35,latMax:40.45,lngMin:49.80,lngMax:49.95},
+        {name:"Kigali",latMin:-1.99,latMax:-1.90,lngMin:30.02,lngMax:30.15},
+        {name:"La Paz",latMin:-16.55,latMax:-16.45,lngMin:-68.20,lngMax:-68.05},
+        {name:"Quito",latMin:-0.28,latMax:-0.12,lngMin:-78.60,lngMax:-78.40},
+        {name:"Cusco",latMin:-13.55,latMax:-13.48,lngMin:-71.99,lngMax:-71.90},
+        {name:"Anchorage",latMin:61.15,latMax:61.25,lngMin:-150.05,lngMax:-149.75},
+        {name:"Fairbanks",latMin:64.80,latMax:64.90,lngMin:-147.90,lngMax:-147.60},
+        {name:"Nuuk",latMin:64.15,latMax:64.22,lngMin:-51.78,lngMax:-51.65},
+        {name:"Tromso",latMin:69.62,latMax:69.70,lngMin:18.88,lngMax:19.05},
+        {name:"Murmansk",latMin:68.92,latMax:69.02,lngMin:33.00,lngMax:33.20},
+        {name:"Sapporo",latMin:43.02,latMax:43.10,lngMin:141.28,lngMax:141.42},
+        {name:"Fukuoka",latMin:33.52,latMax:33.65,lngMin:130.30,lngMax:130.45},
+        {name:"Dunedin",latMin:-45.92,latMax:-45.82,lngMin:170.42,lngMax:170.58},
+        {name:"Wellington",latMin:-41.35,latMax:-41.22,lngMin:174.70,lngMax:174.85},
+        {name:"Hobart",latMin:-42.92,latMax:-42.82,lngMin:147.22,lngMax:147.38},
+        {name:"Christchurch",latMin:-43.60,latMax:-43.48,lngMin:172.55,lngMax:172.75},
+        {name:"Bergen",latMin:60.35,latMax:60.42,lngMin:5.25,lngMax:5.38},
+        {name:"Malmo",latMin:55.56,latMax:55.64,lngMin:12.95,lngMax:13.08},
+        {name:"Vilnius",latMin:54.65,latMax:54.72,lngMin:25.20,lngMax:25.35},
+        {name:"Riga",latMin:56.92,latMax:57.00,lngMin:24.05,lngMax:24.18},
+        {name:"Ljubljana",latMin:46.02,latMax:46.08,lngMin:14.45,lngMax:14.58},
+        {name:"Zagreb",latMin:45.78,latMax:45.85,lngMin:15.90,lngMax:16.05},
+        {name:"Montevideo",latMin:-34.95,latMax:-34.82,lngMin:-56.25,lngMax:-56.05},
+        {name:"Punta Arenas",latMin:-53.20,latMax:-53.05,lngMin:-70.98,lngMax:-70.82},
+        {name:"Antananarivo",latMin:-18.98,latMax:-18.85,lngMin:47.45,lngMax:47.60},
+        {name:"Lusaka",latMin:-15.48,latMax:-15.35,lngMin:28.20,lngMax:28.40},
+        {name:"Windhoek",latMin:-22.65,latMax:-22.50,lngMin:17.00,lngMax:17.15},
+        {name:"Petra",latMin:30.30,latMax:30.36,lngMin:35.42,lngMax:35.50},
+        {name:"Machu Picchu",latMin:-13.18,latMax:-13.14,lngMin:-72.56,lngMax:-72.52},
+        {name:"Yellowknife",latMin:62.42,latMax:62.48,lngMin:-114.45,lngMax:-114.30},
+        {name:"Longyearbyen",latMin:78.20,latMax:78.25,lngMin:15.55,lngMax:15.70},
+        {name:"Yakutsk",latMin:62.00,latMax:62.08,lngMin:129.65,lngMax:129.80},
+        {name:"Ushuaia",latMin:-54.85,latMax:-54.75,lngMin:-68.38,lngMax:-68.18},
+        {name:"Tirana",latMin:41.30,latMax:41.36,lngMin:19.75,lngMax:19.88},
+        {name:"Podgorica",latMin:42.40,latMax:42.48,lngMin:19.20,lngMax:19.35},
+        {name:"Pristina",latMin:42.63,latMax:42.70,lngMin:21.10,lngMax:21.22},
+        {name:"Chisinau",latMin:47.00,latMax:47.08,lngMin:28.78,lngMax:28.92},
+        {name:"Astana",latMin:51.12,latMax:51.20,lngMin:71.35,lngMax:71.52},
+        {name:"Samarkand",latMin:39.62,latMax:39.70,lngMin:66.90,lngMax:67.08},
+        {name:"Bishkek",latMin:42.82,latMax:42.90,lngMin:74.52,lngMax:74.68},
+        {name:"Thimphu",latMin:27.45,latMax:27.52,lngMin:89.60,lngMax:89.68},
+        {name:"Lhasa",latMin:29.62,latMax:29.70,lngMin:91.05,lngMax:91.18},
+        {name:"Darwin",latMin:-12.50,latMax:-12.38,lngMin:130.80,lngMax:130.92},
+        {name:"Alice Springs",latMin:-23.75,latMax:-23.65,lngMin:133.82,lngMax:133.95},
+        {name:"Reunion",latMin:-20.92,latMax:-20.82,lngMin:55.42,lngMax:55.55}
+      ]
+    };
+
+    // ======== متغيرات اللعبة ========
+    let realLat=0, realLng=0, roundActive=false, timer=null, timeLeft=60, totalPoints=0;
+    const miniMap = L.map('miniMap').setView([0,0], 2);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution:'© OpenStreetMap' }).addTo(miniMap);
+    const guessMarker = L.marker([0,0], {draggable:true}).addTo(miniMap);
+    let realMarker=null, connectingLine=null;
+
+    miniMap.on('click', e => { if(roundActive) guessMarker.setLatLng(e.latlng); });
+    const miniMapDiv=document.getElementById('miniMap');
+    miniMapDiv.addEventListener('mouseenter', ()=>setTimeout(()=>miniMap.invalidateSize(),310));
+    miniMapDiv.addEventListener('mouseleave', ()=>setTimeout(()=>miniMap.invalidateSize(),310));
+
+    function updateStreetView(lat,lng){
+        document.getElementById("streetViewFrame").src=
+        `https://maps.google.com/maps?layer=c&cbll=${lat},${lng}&cbp=11,0,0,0,0&output=svembed`;
+    }
+
+    function getRandomLatLng(){
+        const difficulty = document.getElementById("difficulty").value;
+        const areas = allAreas[difficulty];
+        const area = areas[Math.floor(Math.random()*areas.length)];
+        const lat = getRandomCoordinate(area.latMin,area.latMax);
+        const lng = getRandomCoordinate(area.lngMin,area.lngMax);
+        return {lat,lng,area:area.name};
+    }
+
+    // ======== بدء الجولة ========
+    function startRound(){
+        if(roundActive){
+            if(!confirm("الجولة الحالية لم تنته بعد. هل تريد بدء جولة جديدة؟")) return;
+            clearInterval(timer);
+        }
+
+        const {lat,lng}=getRandomLatLng();
+        realLat=parseFloat(lat);
+        realLng=parseFloat(lng);
+        updateStreetView(realLat,realLng);
+        guessMarker.setLatLng([0,0]);
+        miniMap.setView([0,0],2);
+        if(realMarker){ miniMap.removeLayer(realMarker); realMarker=null; }
+        if(connectingLine){ miniMap.removeLayer(connectingLine); connectingLine=null; }
+
+        roundActive=true;
+        timeLeft=60;
+        document.getElementById("points").innerText="";
+        document.getElementById("timer").innerText=`الوقت المتبقي: ${timeLeft}`;
+        if(timer) clearInterval(timer);
+        timer=setInterval(()=>{
+            timeLeft--;
+            document.getElementById("timer").innerText=`الوقت المتبقي: ${timeLeft}`;
+            if(timeLeft<=0) endRound();
+        },1000);
+    }
+
+    // ======== تحقق من التخمين ========
+    function checkGuess(){
+        if(!roundActive) return;
+        const guessPos=guessMarker.getLatLng();
+        const distance=getDistanceFromLatLonInKm(realLat,realLng,guessPos.lat,guessPos.lng);
+        const points=calculatePoints(distance);
+        document.getElementById("points").innerText=`مسافة تخمينك الحالية: ${distance.toFixed(2)} كم | نقاط محتملة: ${points}`;
+    }
+    //تعديل عدد النقاط بعد ان ينهي اللاعب الجولات
+    function endgame() 
+    {
+        ViewBag.CurrentPlayer.SavePlayerProgress(ViewBag.CurrentPlayer.Id,ViewBag.CurrentPlayer.Score+points,ViewBag.CurrentPlayer.pLevel);
+
+        
+        
+    }
+
+    // ======== إنهاء الجولة ========
+    function endRound(){
+        clearInterval(timer);
+        roundActive=false;
+
+        const guessPos=guessMarker.getLatLng();
+        const distance=getDistanceFromLatLonInKm(realLat,realLng,guessPos.lat,guessPos.lng);
+        const points=calculatePoints(distance);
+        totalPoints+=points;
+
+        miniMap.setView([realLat,realLng],4);
+        document.getElementById("points").innerText=`نقاط هذه الجولة: ${points} | مسافة التخمين: ${distance.toFixed(2)} كم`;
+        document.getElementById("totalPoints").innerText=`النقاط الكلية: ${totalPoints}`;
+
+        realMarker=L.marker([realLat,realLng], {icon:L.icon({iconUrl:'https://cdn-icons-png.flaticon.com/512/252/252025.png', iconSize:[30,30]})}).addTo(miniMap);
+        connectingLine=L.polyline([guessPos,[realLat,realLng]], {color:'red'}).addTo(miniMap);
+    }
+
+    // ======== بدء الجولة تلقائياً عند التحميل ========
+    startRound();
+</script>

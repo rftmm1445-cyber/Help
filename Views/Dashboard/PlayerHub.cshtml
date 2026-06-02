@@ -1,0 +1,706 @@
+﻿@* @model WebApplication4.Models.PlayerHubViewModel
+@{
+    ViewData["Title"] = "Player Hub";
+    string firstChar = string.IsNullOrWhiteSpace(Model.Username) ? "?" : Model.Username.Trim()[0].ToString().ToUpper();
+}
+
+<link rel="stylesheet" href="~/css/playerhub-light.css" />
+
+<style>
+    /* ==========================
+       خلفية ديناميكية وحيوية
+       ========================== */
+    body {
+        margin: 0;
+        font-family: "Segoe UI", Tahoma, Arial;
+        background: radial-gradient(ellipse at top left, #6dd5ed, #2193b0), linear-gradient(120deg, rgba(255,255,255,0.1), transparent);
+        color: #1b2b3a;
+        overflow-x: hidden;
+        background-size: 200% 200%;
+        animation: bgMove 60s linear infinite;
+    }
+
+   
+
+    50% {
+        background-position: 50% 50%;
+    }
+
+    100% {
+        background-position: 0% 0%;
+    }
+
+    }
+
+    /* تحسين عناصر UI */
+    .panel-body {
+        background: rgba(255,255,255,0.6);
+        border-radius: 14px;
+        padding: 14px;
+        backdrop-filter: blur(6px);
+    }
+
+    .btn-start {
+        background: linear-gradient(180deg,#7fd35b,#4fa83a);
+        color: #153018;
+        font-weight: 900;
+        font-size: 22px;
+        border-radius: 14px;
+        box-shadow: 0 10px 26px rgba(79,168,58,.35);
+        cursor: pointer;
+    }
+
+    .btn-soft {
+        background: rgba(255,255,255,.8);
+        border-radius: 12px;
+        font-weight: 900;
+        cursor: pointer;
+    }
+</style>
+
+<div class="page">
+
+    <!-- TOP BAR -->
+    <div class="topbar">
+        <div class="idbox">
+            <div class="avatar">
+                <span>@firstChar</span>
+            </div>
+            <div class="hello">
+                <div class="t1">مرحباً بك، @Model.Username</div>
+                <div class="t2">جاهز لتحدّي جديد؟</div>
+            </div>
+        </div>
+
+        <div class="mini-cards">
+            <div class="mini">
+                <div class="mini-head">⚡ السكور</div>
+                <div class="mini-val">@Model.Score</div>
+            </div>
+            <div class="mini">
+                <div class="mini-head">💠 المستوى</div>
+                <div class="mini-val">@Model.Level</div>
+            </div>
+            <div class="mini">
+                <div class="mini-head">🏅 ترتيبك</div>
+                <div class="mini-val">@Model.Rank</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MIDDLE GRID -->
+    <div class="grid3">
+
+        <!-- LEFT: DAILY QUEST -->
+        <div class="panel">
+            <div class="panel-title">عجلة حظ المهام اليومية</div>
+            <div class="panel-body">
+                <div class="wheel-wrap">
+
+                    <!-- العجلة -->
+                    <div class="wheel-area">
+                        <div class="wheel-pointer" title="المؤشر"></div>
+                        <div class="wheel" id="dailyWheel" aria-label="عجلة المهام">
+                            <div class="wheel-center">🎯</div>
+                        </div>
+                    </div>
+
+                    <!-- التحكم + النتيجة -->
+                    <div class="wheel-controls">
+                        <div class="wheel-desc">
+                            لف العجلة لتحصل على مهمة اليوم. ستبقى نفس المهمة طوال اليوم ✅
+                        </div>
+
+                        <button type="button" class="btn-start" id="spinBtn">
+                            لف العجلة
+                        </button>
+
+                        <div class="task-box" id="taskBox" style="display:none;">
+                            <div class="task-title">مهمة اليوم:</div>
+                            <div class="task-text" id="taskText"></div>
+                            <div class="task-note" id="taskNote"></div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- CENTER: MAP -->
+        <div class="center">
+            <div class="hintbar">📍 خمن الموقع على الخريطة، ثم اضغط ابدأ الجولة</div>
+
+            <div class="mapwrap">
+                <div class="mapframe">
+                    <img src="~/images/map-preview.png" class="mapimg" alt="Map Preview" />
+                    <div class="pin"></div>
+                    <div class="ring"></div>
+                </div>
+
+                <button type="button" class="btn-start">ابدأ الجولة</button>
+            </div>
+        </div>
+
+        <!-- RIGHT: PROFILE -->
+        <div class="panel">
+            <div class="panel-title">الملف الشخصي</div>
+            <div class="panel-body">
+                <div class="profile">
+                    <div class="p-avatar">@firstChar</div>
+                    <div class="p-info">
+                        <div class="p-name">@Model.Username</div>
+                        <div class="p-sub">Level @Model.Level • Score @Model.Score</div>
+                    </div>
+                </div>
+
+                <div class="row2">
+                    <a class="btn-soft" href="/Player/Profile">عرض</a>
+                    <a class="btn-soft" href="/Player/Edit">تعديل</a>
+                </div>
+
+                <a class="btn-logout" href="/Account/Logout">تسجيل الخروج</a>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- BOTTOM GRID -->
+    <div class="grid3 bottom">
+
+        <!-- Leaderboard table -->
+        <div class="panel">
+            <div class="panel-title">المتصدرون</div>
+            <div class="panel-body">
+                <table class="lb">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>الاسم</th>
+                            <th>السكور</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var p in Model.TopPlayers)
+                        {
+                            <tr>
+                                <td>@p.Position</td>
+                                <td>@p.Username</td>
+                                <td class="r">@p.Score</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Top 5 avatars -->
+        <div class="panel">
+            <div class="panel-title">Top 5 (المتصدرين)</div>
+            <div class="panel-body">
+                <div class="chips">
+                    @foreach (var p in Model.TopPlayers)
+                    {
+                        var c = string.IsNullOrWhiteSpace(p.Username) ? "?" : p.Username.Trim()[0].ToString().ToUpper();
+                        <div class="chip">@c</div>
+                    }
+                </div>
+                <div class="note">يمكن تطوير هذا القسم لاحقاً ليعرض منافسين آخرين</div>
+            </div>
+        </div>
+
+        <!-- Locked rewards -->
+        <div class="panel">
+            <div class="panel-title">جوائز مقفلة</div>
+            <div class="panel-body">
+                <div class="rewards">
+                    <div class="reward">🎁<span>🔒</span></div>
+                    <div class="reward">🗡️<span>🔒</span></div>
+                    <div class="reward">🛡️<span>🔒</span></div>
+                </div>
+                <div class="unlock">تفتح عند المستوى <b>10</b></div>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+<!-- =============================
+     JavaScript للعجلة (Wheel of Fortune)
+     ============================= -->
+<script>
+    (function(){
+        const wheel = document.getElementById("dailyWheel");
+        const spinBtn = document.getElementById("spinBtn");
+        const taskBox = document.getElementById("taskBox");
+        const taskText = document.getElementById("taskText");
+        const taskNote = document.getElementById("taskNote");
+
+        const tasks = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.WheelTasks));
+        const segmentCount = tasks.length;
+        const segmentAngle = 360 / segmentCount;
+        let isSpinning = false;
+        let currentRotation = 0;
+
+        function showTask(index){
+            taskBox.style.display = "block";
+            taskText.textContent = tasks[index];
+            taskNote.textContent = "مهمة اليوم";
+        }
+
+        if(!@Model.CanSpinWheel.ToString().ToLower() && @Model.SelectedTaskIndex >= 0){
+            showTask(@Model.SelectedTaskIndex);
+            spinBtn.textContent = "تم اختيار مهمة اليوم ✅";
+            spinBtn.disabled = true;
+        }
+
+        spinBtn.addEventListener("click", function(){
+            if(isSpinning) return;
+            isSpinning = true;
+
+            const pickedIndex = Math.floor(Math.random() * segmentCount);
+            const targetAngle = (pickedIndex * segmentAngle) + (segmentAngle / 2);
+            const extraSpins = 5;
+            const finalRotation = (extraSpins * 360) + (360 - targetAngle);
+            currentRotation += finalRotation;
+
+            wheel.style.transform = `rotate(${currentRotation}deg)`;
+
+            setTimeout(() => {
+                isSpinning = false;
+                showTask(pickedIndex);
+                spinBtn.textContent = "تم اختيار مهمة اليوم ✅";
+                spinBtn.disabled = true;
+            }, 4200);
+        });
+    })();
+</script>
+
+@**@
+@* 
+@model WebApplication4.Models.PlayerHubViewModel
+@{
+    ViewData["Title"] = "Player Hub";
+    string firstChar = string.IsNullOrWhiteSpace(Model.Username) ? "?" : Model.Username.Trim()[0].ToString().ToUpper();
+}
+<link rel="stylesheet" href="~/css/playerhub-light.css" />
+
+<div class="page">
+
+    <!-- Topbar -->
+    <div class="topbar">
+        <div class="idbox">
+            <div class="avatar">@firstChar</div>
+            <div class="hello">
+                <div class="t1">مرحباً بك، @Model.Username</div>
+                <div class="t2">جاهز لتحدّي جديد؟</div>
+            </div>
+        </div>
+        <div class="mini-cards">
+            <div class="mini">
+                <div class="mini-head">⚡ السكور</div>
+                <div class="mini-val">@Model.Score</div>
+            </div>
+            <div class="mini">
+                <div class="mini-head">💠 المستوى</div>
+                <div class="mini-val">@Model.Level</div>
+            </div>
+            <div class="mini">
+                <div class="mini-head">🏅 ترتيبك</div>
+                <div class="mini-val">@Model.Rank</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Middle Grid -->
+    <div class="grid3">
+
+        <!-- Left: Wheel -->
+        <div class="panel">
+            <div class="panel-title">عجلة حظ المهام اليومية</div>
+            <div class="panel-body">
+                <div class="wheel-wrap">
+                    <div class="wheel-area">
+                        <div class="wheel-pointer"></div>
+                        <div class="wheel" id="dailyWheel" aria-label="عجلة المهام">
+                            <div class="wheel-center">🎯</div>
+                        </div>
+                    </div>
+                    <div class="wheel-controls">
+                        <div class="wheel-desc">لف العجلة لتحصل على مهمة اليوم. ستبقى نفس المهمة طوال اليوم ✅</div>
+                        <button type="button" class="btn-start" id="spinBtn">لف العجلة</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Center: Map -->
+        <div class="center">
+            <div class="hintbar">📍 خمن الموقع على الخريطة، ثم اضغط ابدأ الجولة</div>
+            <div class="mapwrap">
+                <div class="mapframe">
+                    <img src="~/images/map-preview.png" class="mapimg" alt="Map Preview" />
+                    <div class="pin"></div>
+                    <div class="ring"></div>
+                </div>
+                <!-- زر ابدأ الجولة الجديد -->
+                <a href="/Gameround/Gameround" class="btn-start-map">ابدأ الجولة</a>
+            </div>
+        </div>
+
+        <!-- Right: Profile -->
+        <div class="panel">
+            <div class="panel-title">الملف الشخصي</div>
+            <div class="panel-body">
+                <div class="profile">
+                    <div class="p-avatar">@firstChar</div>
+                    <div class="p-info">
+                        <div class="p-name">@Model.Username</div>
+                        <div class="p-sub">Level @Model.Level • Score @Model.Score</div>
+                    </div>
+                </div>
+                <div class="row2">
+                    <a class="btn-soft" href="/Player/Profile">عرض</a>
+                    <a class="btn-soft" href="/Player/Edit">تعديل</a>
+                </div>
+                <a class="btn-logout" href="/Account/Logout">تسجيل الخروج</a>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Bottom Grid: Leaderboard -->
+    <div class="grid3 bottom">
+        <div class="panel">
+            <div class="panel-title">المتصدرون</div>
+            <div class="panel-body">
+                <table class="lb">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>الاسم</th>
+                            <th>السكور</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var p in Model.TopPlayers)
+                        {
+                            <tr>
+                                <td>@p.Position</td>
+                                <td>@p.Username</td>
+                                <td class="r">@p.Score</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Task Overlay Card -->
+    <div class="task-overlay" id="taskOverlay">
+        <div class="task-card">
+            <h2 id="taskTitle">مهمة اليوم</h2>
+            <p id="taskNote"></p>
+            <button class="close-btn" id="closeTask">إغلاق</button>
+        </div>
+    </div>
+</div>
+ *@
+@model WebApplication4.Models.PlayerHubViewModel
+@{
+    ViewData["Title"] = "Game Dashboard";
+}
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<style>
+    body {
+        background: radial-gradient(circle, #1a103c 0%, #0b061f 100%);
+        color: #ffffff;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        direction: rtl;
+        text-align: right;
+    }
+
+    .profile-section {
+        background: rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(10px);
+        border-bottom: 2px solid #6f42c1;
+        padding: 15px;
+    }
+
+    .profile-avatar {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        border: 2px solid #00f2fe;
+        box-shadow: 0 0 10px #00f2fe;
+    }
+
+    .stat-badge {
+        background: linear-gradient(45deg, #f107a3, #7b2ff7);
+        border-radius: 20px;
+        padding: 5px 15px;
+        font-size: 0.9rem;
+        font-weight: bold;
+    }
+
+    .game-btn {
+        background: linear-gradient(135deg, #2b1055, #7522ff);
+        border: 2px solid #00f2fe;
+        color: white;
+        padding: 18px;
+        font-size: 1.3rem;
+        font-weight: bold;
+        border-radius: 15px;
+        margin-bottom: 15px;
+        transition: all 0.3s ease;
+        box-shadow: 0 5px 15px rgba(0, 242, 254, 0.2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 15px;
+        width: 100%;
+    }
+
+        .game-btn:hover {
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 0 0 25px #00f2fe;
+            background: linear-gradient(135deg, #00f2fe, #4facfe);
+            color: #100a26;
+        }
+
+    .btn-exit {
+        background: linear-gradient(135deg, #4d0519, #ff0044);
+        border-color: #ff0044;
+    }
+
+    /* تصميم العجلة المحدث ليناسب 8 أقسام للمهام اليومية */
+    .wheel-container {
+        position: relative;
+        width: 340px;
+        height: 340px;
+        margin: 0 auto;
+    }
+
+    .lucky-wheel {
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        border: 8px solid #ffcc00;
+        position: relative;
+        overflow: hidden;
+        transition: transform 6s cubic-bezier(0.25, 0.1, 0.1, 1);
+        background: #111;
+    }
+
+    /* تقسيم العجلة هندسياً إلى 8 قطاعات (كل قطاع 45 درجة) */
+    .slice {
+        position: absolute;
+        width: 50%;
+        height: 50%;
+        transform-origin: 100% 100%;
+        left: 0;
+        top: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .slice-text {
+        position: absolute;
+        left: 15px;
+        top: 45px;
+        transform: rotate(22.5deg); /* موازنة زاوية النص ليقف بمنتصف القطاع تماماً */
+        font-weight: bold;
+        font-size: 0.75rem;
+        color: white;
+        text-shadow: 2px 2px 3px black;
+        white-space: nowrap;
+        max-width: 110px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    /* توزيع الألوان والزوايا على القطاعات الثمانية */
+    .s1 {
+        transform: rotate(0deg) skewX(45deg);
+        background: #ff0055;
+    }
+
+    .s2 {
+        transform: rotate(45deg) skewX(45deg);
+        background: #00ccff;
+    }
+
+    .s3 {
+        transform: rotate(90deg) skewX(45deg);
+        background: #9900ff;
+    }
+
+    .s4 {
+        transform: rotate(135deg) skewX(45deg);
+        background: #ffcc00;
+    }
+
+    .s5 {
+        transform: rotate(180deg) skewX(45deg);
+        background: #00ff66;
+    }
+
+    .s6 {
+        transform: rotate(225deg) skewX(45deg);
+        background: #ff6600;
+    }
+
+    .s7 {
+        transform: rotate(270deg) skewX(45deg);
+        background: #e600ac;
+    }
+
+    .s8 {
+        transform: rotate(315deg) skewX(45deg);
+        background: #4facfe;
+    }
+
+    .wheel-pointer {
+        position: absolute;
+        top: -15px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 0;
+        height: 0;
+        border-left: 15px solid transparent;
+        border-right: 15px solid transparent;
+        border-top: 30px solid #ffcc00;
+        z-index: 10;
+    }
+
+    .spin-center {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 65px;
+        height: 65px;
+        background: white;
+        border-radius: 50%;
+        color: #100a26;
+        font-weight: bold;
+        border: 3px solid #ffcc00;
+        z-index: 12;
+        cursor: pointer;
+        box-shadow: 0 0 10px rgba(0,0,0,0.5);
+    }
+</style>
+
+<div class="profile-section d-flex justify-content-between align-items-center mb-4">
+    <div class="d-flex align-items-center gap-3">
+        <img src="https://api.dicebear.com/7.x/bottts/svg?seed=@Model.Username" class="profile-avatar" alt="Avatar">
+        <div>
+            <h5 class="m-0 text-info">@Model.Username</h5>
+            <small class="text-muted">المستوى: <span class="text-warning" id="displayLevel">@Model.Level</span></small>
+            <span class="badge bg-secondary ms-2">الترتيب: #@Model.Rank</span>
+        </div>
+    </div>
+    <div class="d-flex gap-2">
+        <span class="stat-badge"><i class="bi bi-trophy-fill text-warning me-1"></i> <span id="displayScore">@Model.Score</span> نقطة</span>
+    </div>
+</div>
+
+<div class="container my-3">
+    <div class="row align-items-center g-5">
+
+        <div class="col-md-6 order-2 order-md-1">
+            <div class="px-3">
+                <button class="game-btn"><i class="bi bi-globe-americas fs-3"></i> <span>1. اختيار دولة</span></button>
+
+
+                <a asp-action="Randomm" asp-controller="the4" class="game-btn text-decoration-none">
+                    <i class="bi bi-shuffle fs-3"></i>
+                    <span>2. عشوائي</span>
+                </a>
+                <button class="game-btn"><i class="bi bi-geo-alt-fill fs-3"></i> <span>3. مواقعي</span></button>
+                <button class="game-btn btn-exit mt-4"><i class="bi bi-box-arrow-right fs-3"></i> <span>4. الخروج</span></button>
+            </div>
+        </div>
+
+        <div class="col-md-6 order-1 order-md-2 text-center">
+            <div class="p-4 rounded-4" style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05)">
+                <h4 class="text-warning mb-4"><i class="bi bi-stars"></i> عجلة المهام اليومية <i class="bi bi-stars"></i></h4>
+
+                <div class="wheel-container mb-4">
+                    <div class="wheel-pointer"></div>
+                    <div class="lucky-wheel" id="wheel">
+                        @for (int i = 0; i < Model.WheelTasks.Count; i++)
+                        {
+                            <div class="slice s@(i + 1)"><span class="slice-text">@Model.WheelTasks[i]</span></div>
+                        }
+                    </div>
+                    <button class="spin-center d-flex align-items-center justify-content-center" id="spinBtn" onclick="spinWheel()">إبدأ</button>
+                </div>
+                <p class="text-muted small" id="wheelStatus">مسموح لك بمهمة واحدة كل يوم!</p>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    // جلب المؤشر المختار مسبقاً من الـ Controller بناءً على حسابات السيرفر
+    const serverSelectedIndex = @Model.SelectedTaskIndex;
+    const canSpinFromServer = @Model.CanSpinWheel.ToString().ToLower();
+    const taskText = "@Html.Raw(Model.SelectedTaskText)";
+
+    document.addEventListener("DOMContentLoaded", function () {
+        // التحقق مما إذا كان اللاعب قد لف العجلة اليوم بناءً على السيرفر
+        if (!canSpinFromServer) {
+            document.getElementById("wheelStatus").innerText = "لقد حصلت على مهمتك اليومية بالفعل! عد غداً.";
+            document.getElementById('spinBtn').disabled = true;
+        }
+    });
+
+    function spinWheel() {
+        if (!canSpinFromServer) {
+            alert("لقد حصلت على مهمتك اليومية بالفعل! عد غداً.");
+            return;
+        }
+
+        const wheel = document.getElementById('wheel');
+        const btn = document.getElementById('spinBtn');
+        btn.disabled = true;
+
+        // حساب عدد الدرجات ليدور العجلة 6 دورات كاملة ثم يقف على القطاع المحدد من السيرفر بدقة
+        // القطاعات مقسمة على 45 درجة، والاتجاه معدل ليتوافق مع المؤشر العلوي
+        const degreesPerSlice = 45;
+        const targetAngle = 360 - (serverSelectedIndex * degreesPerSlice);
+        const totalDegrees = 2160 + targetAngle; // 6 دورات كاملة + زاوية الهدف
+
+        wheel.style.transform = `rotate(${totalDegrees}deg)`;
+
+        setTimeout(() => {
+            alert(`مهمتك اليوم هي:\n🎯 "${taskText}"`);
+
+            // في حال رغبت بإرسال تأكيد الحفظ أو تحديث فوري للنقاط إلى سيرفر الـ Gameround
+            if(taskText.includes("50 نقطة")) {
+                 claimPrizeFromServer(50);
+            }
+
+            document.getElementById("wheelStatus").innerText = "تم تحديد مهمة اليوم بنجاح!";
+        }, 6000); // 6 ثوانٍ من الدوران الحماسي السريع والمطول
+    }
+
+    function claimPrizeFromServer(points) {
+        fetch('/Gameround/ClaimWheelPrize', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: `points=${points}`
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                document.getElementById("displayScore").innerText = data.newScore;
+            }
+        });
+    }
+</script>

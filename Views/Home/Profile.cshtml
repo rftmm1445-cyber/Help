@@ -1,0 +1,53 @@
+﻿@model WebApplication4.Models.Player
+
+@{
+    ViewData["Title"] = "الملف الشخصي";
+}
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-body">
+                    <h3 class="card-title text-center mb-4">الملف الشخصي</h3>
+
+                    @if (ViewBag.Message != null)
+                    {
+                        <div class="alert alert-info">@ViewBag.Message</div>
+                    }
+
+                    <form method="post" asp-action="Profile" asp-controller="Account">
+                        <div class="mb-3">
+                            <label class="form-label">اسم المستخدم</label>
+                            <input asp-for="Username" class="form-control" required />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">البريد الإلكتروني</label>
+                            <input asp-for="Email" class="form-control" type="email" required />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">كلمة المرور (للتغيير فقط)</label>
+                            <input asp-for="Password" class="form-control" type="password" placeholder="اتركه فارغًا إذا لم تريد تغييره" />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">النقاط (Score)</label>
+                            <input asp-for="Score" class="form-control" readonly />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">المستوى (Level)</label>
+                            <input asp-for="pLevel" class="form-control" readonly />
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">تحديث البيانات</button>
+                    </form>
+
+                    <hr />
+                    <p class="text-center">
+                        <a asp-action="Logout" asp-controller="Account" class="btn btn-danger">تسجيل الخروج</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

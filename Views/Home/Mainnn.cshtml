@@ -1,0 +1,113 @@
+﻿@* @using Microsoft.AspNetCore.Http
+@inject IHttpContextAccessor HttpContextAccessor
+@{
+    ViewData["Title"] = "لوحة التحكم الرئيسية";
+
+    // 1. جلب اسم المستخدم الحالي من الجلسة (Session)
+    string username = HttpContextAccessor.HttpContext.Session.GetString("Username");
+    WebApplication4.Models.Player currentPlayer = null;
+
+    // 2. جلب بيانات النقاط والمستوى الحية من قاعدة البيانات باستخدام الاسم
+    if (!string.IsNullOrEmpty(username))
+    {
+        currentPlayer = WebApplication4.Models.Player.GetPlayerByUsername(username);
+    }
+}
+
+<div class="container mt-5">
+    <div class="row g-4">
+        <div class="col-md-4">
+            <div class="card p-4 border-0 shadow rounded-4 text-center text-white" style="background-color: #162447;">
+                <div class="mb-3">
+                    <div class="rounded-circle d-inline-flex align-items-center justify-content-center bg-secondary text-white fw-bold shadow mb-2" style="width: 70px; height: 70px; font-size: 1.8rem;">
+                        @(currentPlayer != null ? currentPlayer.Username[0].ToString().ToUpper() : "🥷")
+                    </div>
+                </div>
+                <h3 id="playerName" class="text-warning fw-bold">@(currentPlayer != null ? currentPlayer.Username : "اسم اللاعب")</h3>
+                <hr class="border-secondary" />
+                <p class="fs-5">⚡ النقاط: <span id="playerPoints" class="fw-bold text-info">@(currentPlayer != null ? currentPlayer.Score : 0)</span></p>
+                <p class="fs-5">💠 المستوى: <span id="playerLevel" class="fw-bold text-success">@(currentPlayer != null ? currentPlayer.pLevel : 1)</span></p>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            <div class="card p-4 border-0 shadow rounded-4 text-white" style="background-color: #162447;">
+                <h3 class="fw-bold mb-4 border-bottom pb-2 text-warning"><i class="fa-solid fa-gauge"></i> لوحة التحكم</h3>
+
+                <a asp-controller="Gameround" asp-action="Index" class="btn btn-warning mb-3 w-100 fw-bold py-2 text-dark rounded-3 shadow-sm">
+                    <i class="fa-solid fa-play me-2"></i> ابدأ اللعبة (الخريطة والتلميحات)
+                </a>
+
+                <button class="btn btn-warning mb-3 w-100 fw-bold py-2 text-dark rounded-3 shadow-sm">
+                    <i class="fa-solid fa-gear me-2"></i> الإعدادات
+                </button>
+
+                <button class="btn btn-warning mb-3 w-100 fw-bold py-2 text-dark rounded-3 shadow-sm">
+                    <i class="fa-solid fa-user me-2"></i> الملف الشخصي
+                </button>
+
+                <a asp-controller="Account" asp-action="Logout" class="btn btn-danger mb-2 w-100 fw-bold py-2 rounded-3 shadow-sm">
+                    <i class="fa-solid fa-power-off me-2"></i> تسجيل الخروج
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+ *@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>الصفحة الرئيسية للعبة</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+    <style>
+        body {
+            background-color: #1a1a2e;
+            color: white;
+        }
+
+        .card {
+            background-color: #162447;
+        }
+
+        .btn-game {
+            background-color: #fca311;
+            color: #1a1a2e;
+        }
+
+            .btn-game:hover {
+                background-color: #ffb833;
+                color: #1a1a2e;
+            }
+    </style>
+</head>
+<body>
+    <div class="container mt-5">
+        <div class="row">
+            <!-- معلومات اللاعب -->
+            <div class="col-md-4">
+                <div class="card p-3">
+                    <h3 id="playerName">اسم اللاعب</h3>
+                    <p>النقاط: <span id="playerPoints">0</span></p>
+                    <p>المستوى: <span id="playerLevel">1</span></p>
+                </div>
+            </div>
+
+            <!-- لوحة التحكم -->
+            <div class="col-md-8">
+                <div class="card p-3">
+                    <h3>لوحة التحكم</h3>
+                    <button class="btn btn-game mb-2 w-100">ابدأ اللعبة</button>
+                    <button class="btn btn-game mb-2 w-100">الإعدادات</button>
+                    <button class="btn btn-game mb-2 w-100">الملف الشخصي</button>
+                    <button class="btn btn-game mb-2 w-100">تسجيل الخروج</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

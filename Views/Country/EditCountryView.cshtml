@@ -1,0 +1,122 @@
+﻿@model WebApplication4.Models.Country
+@{
+    ViewData["Title"] = "تعديل بيانات الدولة";
+    var continents = ViewBag.Continents as List<WebApplication4.Models.Continent> ?? new List<WebApplication4.Models.Continent>();
+}
+
+<div class="container mt-5">
+    <div class="card shadow-lg border-0 rounded-5 mx-auto p-4 dark-card" style="max-width: 800px;">
+        <div class="card-header text-center py-4 rounded-top-4 dark-header">
+            🌍 تعديل بيانات الدولة
+        </div>
+
+        <div class="card-body">
+            <form asp-action="DoUpdateExistedCountry" asp-controller="Country" method="post" enctype="multipart/form-data">
+                <input type="hidden" asp-for="Country_Id" />
+                <input type="hidden" asp-for="Country_Flag" />
+
+                <!-- اختيار القارة -->
+                <div class="mb-4">
+                    <label class="form-label fw-bold text-light">القارة:</label>
+                    <select asp-for="Continent_Id" class="form-select form-select-lg shadow-sm dark-input" required>
+                        <option value="">اختر القارة</option>
+                        @foreach (var cont in continents)
+                        {
+                            <option value="@cont.Id" selected="@(Model.Continent_Id == cont.Id ? "selected" : null)">@cont.Name</option>
+                        }
+                    </select>
+                </div>
+
+                <!-- اسم الدولة -->
+                <div class="mb-4">
+                    <label for="Country_Name" class="form-label fw-bold text-light">اسم الدولة:</label>
+                    <input type="text" id="Country_Name" name="Country_Name" asp-for="Country_Name" placeholder="مثال: مصر" class="form-control form-control-lg shadow-sm dark-input" required />
+                </div>
+
+                <!-- العاصمة -->
+                <div class="mb-4">
+                    <label for="Country_Capital" class="form-label fw-bold text-light">العاصمة:</label>
+                    <input type="text" id="Country_Capital" name="Country_Capital" asp-for="Country_Capital" placeholder="مثال: القاهرة" class="form-control form-control-lg shadow-sm dark-input" required />
+                </div>
+
+                <div class="row">
+                    <!-- عدد السكان -->
+                    <div class="col-md-6 mb-4">
+                        <label for="Country_Population" class="form-label fw-bold text-light">عدد السكان:</label>
+                        <input type="number" id="Country_Population" name="Country_Population" asp-for="Country_Population" min="0" placeholder="مثال: 10000000" class="form-control form-control-lg shadow-sm dark-input" required />
+                    </div>
+
+                    <!-- المساحة -->
+                    <div class="col-md-6 mb-4">
+                        <label for="Country_Area" class="form-label fw-bold text-light">المساحة (كم²):</label>
+                        <input type="number" step="0.01" id="Country_Area" name="Country_Area" asp-for="Country_Area" min="0" placeholder="مثال: 1000" class="form-control form-control-lg shadow-sm dark-input" required />
+                    </div>
+                </div>
+
+                <!-- صورة العلم -->
+                <div class="mb-4 text-center">
+                    <img src="@Model.Country_Flag" class="img-fluid mb-2 rounded-3" style="max-height:200px; object-fit:cover;" />
+                    <label for="Country_Flag_File" class="form-label fw-bold text-light">تغيير صورة العلم:</label>
+                    <input type="file" id="Country_Flag_File" name="Country_Flag_File" class="form-control form-control-lg shadow-sm dark-input" accept="image/*" />
+                </div>
+
+                <!-- وصف الدولة -->
+                <div class="mb-4">
+                    <label for="Country_Description" class="form-label fw-bold text-light">وصف الدولة:</label>
+                    <textarea id="Country_Description" name="Country_Description" asp-for="Country_Description" rows="5" placeholder="أدخل وصف الدولة هنا..." class="form-control form-control-lg shadow-sm dark-input"></textarea>
+                </div>
+
+                <!-- أزرار الحفظ والعودة -->
+                <div class="text-center">
+                    <button type="submit" class="btn btn-save btn-lg px-5 py-2 shadow-sm">💾 حفظ التعديلات</button>
+                    <a asp-controller="Country" asp-action="ShowCountries" class="btn btn-cancel btn-lg ms-3 shadow-sm">🔙 العودة للقائمة</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+    .dark-card {
+        background-color: rgba(0,0,50,0.85);
+        border-radius: 15px;
+    }
+
+    .dark-header {
+        background: linear-gradient(135deg, #6610f2, #0d6efd);
+        color: #fff;
+        font-size: 1.5rem;
+        font-weight: bold;
+    }
+
+    .dark-input {
+        background-color: rgba(255,255,255,0.05);
+        border: 1px solid rgba(255,255,255,0.3);
+        color: #fff;
+    }
+    .dark-input::placeholder {
+        color: rgba(255,255,255,0.6);
+    }
+
+    .btn-save {
+        background: linear-gradient(45deg, #0dcaf0, #198754);
+        color: #fff;
+        font-weight: bold;
+        border-radius: 50px;
+        transition: all 0.3s ease;
+    }
+    .btn-save:hover { transform: translateY(-3px); box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+
+    .btn-cancel {
+        background: linear-gradient(45deg, #ffc107, #fd7e14);
+        color: #fff;
+        font-weight: bold;
+        border-radius: 50px;
+        transition: all 0.3s ease;
+    }
+    .btn-cancel:hover { transform: translateY(-3px); box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+
+    .shadow-sm {
+        box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.3) !important;
+    }
+</style>

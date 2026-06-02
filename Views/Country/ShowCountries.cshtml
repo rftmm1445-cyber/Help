@@ -1,0 +1,186 @@
+﻿@using WebApplication4.Models
+@{
+    ViewData["Title"] = "Show Countries";
+    List<Country> countries = ViewBag.Countries ?? new List<Country>();
+    List<Continent> continents = ViewBag.Continents ?? new List<Continent>();
+    int modalIndex = 0;
+}
+
+<div class="container mt-4">
+    <h1 class="display-4 text-center mb-4">لدينا @countries.Count دول</h1>
+    <p class="text-center">تعرف على الدول الموجودة في قاعدة البيانات.</p>
+
+    <div class="text-center mb-4">
+        <a asp-controller="Country" asp-action="AddNewCountryView" class="btn btn-primary btn-lg shadow">
+            ➕ إضافة دولة جديدة
+        </a>
+    </div>
+
+    <!-- البحث -->
+    <div class="mb-4 text-center">
+        <input type="text" id="searchInput" class="form-control w-50 d-inline-block" placeholder="ابحث عن دولة أو العاصمة أو القارة..." />
+    </div>
+
+    <!-- كروت الدول -->
+    <div class="row g-4 text-center mb-5" id="countryCards">
+        @foreach (var c in countries)
+        {
+            var continentNameCard = continents.FirstOrDefault(x => x.Id == c.Continent_Id)?.Name ?? "غير محدد";
+            <div class="col-md-4 country-card">
+                <div class="card h-100 shadow-sm country-card-hover">
+                    <img src="@c.Country_Flag" class="card-img-top" style="height:200px; object-fit:cover;" />
+                    <div class="card-body d-flex flex-column">
+                        <h5 class="card-title">@c.Country_Name</h5>
+                        <p class="card-text">العاصمة: @c.Country_Capital</p>
+                        <p>القارة: @continentNameCard</p>
+                        <span class="mt-auto btn btn-info">عرض التفاصيل</span>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    <!-- جدول الإدارة -->
+    <h2 class="mb-3">لوحة الإدارة - إدارة الدول</h2>
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered align-middle" id="countryTable">
+            <thead class="table-dark text-center">
+                <tr>
+                    <th>ID</th>
+                    <th>اسم الدولة</th>
+                    <th>العاصمة</th>
+                    <th>عدد السكان</th>
+                    <th>المساحة</th>
+                    <th>القارة</th>
+                    <th>صورة العلم</th>
+                    <th>إجراءات</th>
+                </tr>
+            </thead>
+            <tbody class="text-center">
+                @foreach (var c in countries)
+                {
+                    var continentNameTable = continents.FirstOrDefault(x => x.Id == c.Continent_Id)?.Name ?? "غير محدد";
+                    var currentModalId = "modal" + modalIndex;
+                    var currentModalIdLabel = currentModalId + "Label";
+                    modalIndex++;
+
+                    <tr class="country-row">
+                        <td>@c.Country_Id</td>
+                        <td>@c.Country_Name</td>
+                        <td>@c.Country_Capital</td>
+                        <td>@c.Country_Population</td>
+                        <td>@c.Country_Area</td>
+                        <td>@continentNameTable</td>
+                        <td>
+                            <img src="@c.Country_Flag" width="100" height="100" style="object-fit:cover;" />
+                        </td>
+                        <td>
+                            <a asp-controller="Country" asp-action="EditCountry" asp-route-Country_Id="@c.Country_Id" class="btn btn-warning btn-sm mb-1">تعديل</a>
+                            <a asp-controller="Country" asp-action="DeleteCountry" asp-route-Country_Id="@c.Country_Id" class="btn btn-danger btn-sm mb-1" onclick="return confirm('هل أنت متأكد من حذف الدولة @c.Country_Name؟');">حذف</a>
+
+                            <button type="button" class="btn btn-info btn-sm mb-1" data-bs-toggle="modal" data-bs-target="#@currentModalId">
+                                عرض
+                            </button>
+
+                            <!-- Modal -->
+                            <div class="modal fade" id="@currentModalId" tabindex="-1" aria-labelledby="@currentModalIdLabel" aria-hidden="true">
+                                <div class="modal-dialog modal-dialog-centered">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title" id="@currentModalIdLabel">@c.Country_Name - تفاصيل الدولة</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body text-center">
+                                            <img src="@c.Country_Flag" class="img-fluid mb-3" style="max-height:300px; object-fit:cover;" />
+                                            <p><strong>العاصمة:</strong> @c.Country_Capital</p>
+                                            <p><strong>عدد السكان:</strong> @c.Country_Population</p>
+                                            <p><strong>المساحة:</strong> @c.Country_Area كم²</p>
+                                            <p><strong>القارة:</strong> @continentNameTable</p>
+                                            <p><strong>الوصف:</strong> @c.Country_Description</p>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إغلاق</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<style>
+    /* تأثير الخلفية */
+    body::before {
+        content: "";
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: url('/Photo/earth-globe.jpg') no-repeat center center/cover;
+        filter: blur(6px) brightness(0.5);
+        z-index: -2;
+        animation: rotateBg 200s linear infinite;
+    }
+
+    body::after {
+        content: "";
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.01);
+        z-index: -1;
+    }
+
+    /* كروت الدول */
+    .country-card .card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .country-card-hover:hover {
+        transform: translateY(-8px) scale(1.03);
+        box-shadow: 0 12px 24px rgba(0,0,0,0.3);
+    }
+
+    /* أزرار */
+    .btn {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 10px rgba(0,0,0,0.2);
+        }
+</style>
+
+@section Scripts {
+    <script>
+        const searchInput = document.getElementById('searchInput');
+
+        searchInput.addEventListener('keyup', function() {
+            const filter = this.value.toLowerCase();
+
+            // البحث في الجدول
+            document.querySelectorAll('#countryTable .country-row').forEach(row => {
+                const name = row.cells[1].textContent.toLowerCase();
+                const capital = row.cells[2].textContent.toLowerCase();
+                const continent = row.cells[5].textContent.toLowerCase();
+                row.style.display = (name.includes(filter) || capital.includes(filter) || continent.includes(filter)) ? '' : 'none';
+            });
+
+            // البحث في الكروت
+            document.querySelectorAll('.country-card').forEach(card => {
+                const name = card.querySelector('.card-title').textContent.toLowerCase();
+                const capital = card.querySelector('.card-text').textContent.toLowerCase();
+                const continent = card.querySelector('p:nth-child(3)').textContent.toLowerCase();
+                card.style.display = (name.includes(filter) || capital.includes(filter) || continent.includes(filter)) ? '' : 'none';
+            });
+        });
+    </script>
+}

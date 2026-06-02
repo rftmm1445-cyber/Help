@@ -1,0 +1,115 @@
+﻿@using WebApplication4.Models
+@{
+    ViewData["Title"] = "Show Continents";
+
+    // جلب القائمة من ViewBag
+    List<Continent> continents = ViewBag.continents;
+    int modalIndex = 0;
+}
+
+<div class="container mt-4">
+    <h1 class="display-4 text-center mb-4">لدينا @ViewBag.t قارات</h1>
+    <p class="text-center">
+        تعرف على القارات الموجودة في قاعدة البيانات.
+    </p>
+
+    <div class="row g-4 text-center mb-5">
+        @foreach (var c in continents)
+        {
+            <div class="col-md-4">
+                <div class="card h-100 shadow-sm">
+                    <img src="@c.PhotoUrl" class="card-img-top" alt="@c.Name" style="height:200px; object-fit:cover;" />
+                    <div class="card-body d-flex flex-column">
+                        <h5 class="card-title">@c.Name</h5>
+                        <p class="card-text">@c.Description</p>
+                        <p>عدد الدول: @c.CountryCount</p>
+                        <p>عدد السكان: @c.Population</p>
+                        <span class="mt-auto btn @(c.IsInhabited ? "btn-success" : "btn-danger")">
+                            @(c.IsInhabited ? "مأهولة" : "غير مأهولة")
+                        </span>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    <h2 class="mb-3">لوحة الإدارة - إدارة القارات</h2>
+    <a href="@Url.Action("AddContinent", "Admin")" class="btn btn-primary mb-3">إضافة قارة جديدة</a>
+
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered align-middle">
+            <thead class="table-dark text-center">
+                <tr>
+                    <th>ID</th>
+                    <th>اسم القارة</th>
+                    <th>الوصف</th>
+                    <th>عدد الدول</th>
+                    <th>عدد السكان</th>
+                    <th>صورة</th>
+                    <th>حالة القارة</th>
+                    <th>إجراءات</th>
+                </tr>
+            </thead>
+            <tbody class="text-center">
+                @foreach (var c in continents)
+                {
+                    var currentModalId = "modal" + modalIndex;
+                    var currentModalIdLabel = currentModalId + "Label";
+                    modalIndex++;
+
+                    <tr>
+                        <td>@c.Id</td>
+                        <td>@c.Name</td>
+                        <td>@c.Description</td>
+                        <td>@c.CountryCount</td>
+                        <td>@c.Population</td>
+                        <td>
+                            <img src="@c.PhotoUrl" width="100" height="100" style="object-fit:cover;" alt="@c.Name" />
+                        </td>
+                        <td>
+                            <span class="@(c.IsInhabited ? "text-success" : "text-danger")">
+                                @(c.IsInhabited ? "مأهولة" : "غير مأهولة")
+                            </span>
+                        </td>
+                        <td>
+                            <a asp-controller="Admin" asp-action="EditContinent" asp-route-id="@c.Id" class="btn btn-warning btn-sm mb-1">تعديل</a>
+                            <a asp-controller="Admin" asp-action="DeleteContinent" asp-route-id="@c.Id"
+                               class="btn btn-danger btn-sm mb-1" onclick="return confirm('هل أنت متأكد من حذف هذه القارة؟');">حذف</a>
+
+                            <button type="button" class="btn btn-info btn-sm mb-1" data-bs-toggle="modal" data-bs-target="#@currentModalId">
+                                عرض
+                            </button>
+
+                            <!-- Modal -->
+                            <div class="modal fade" id="@currentModalId" tabindex="-1" aria-labelledby="@currentModalIdLabel" aria-hidden="true">
+                                <div class="modal-dialog modal-dialog-centered">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title" id="@currentModalIdLabel">@c.Name - تفاصيل القارة</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body text-center">
+                                            <img src="@c.PhotoUrl" class="img-fluid mb-3" style="max-height:300px; object-fit:cover;" alt="@c.Name" />
+                                            <p>@c.Description</p>
+                                            <p><strong>عدد الدول:</strong> @c.CountryCount</p>
+                                            <p><strong>عدد السكان:</strong> @c.Population</p>
+                                            <p>
+                                                <strong>حالة القارة:</strong>
+                                                <span class="@(c.IsInhabited ? "text-success" : "text-danger")">
+                                                    @(c.IsInhabited ? "مأهولة" : "غير مأهولة")
+                                                </span>
+                                            </p>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إغلاق</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

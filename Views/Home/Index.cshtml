@@ -1,0 +1,393 @@
+﻿@using WebApplication4.Models
+@{
+    List<Continent> continents = ViewBag.continents;
+    int modalIndex = 0;
+}
+
+<div class="container mt-5">
+    <h1 class="display-4 text-center mb-3 text-light">🌍 قائمة القارات</h1>
+    <p class="text-center mb-5 text-light">
+        Learn about
+        <a href="https://learn.microsoft.com/aspnet/core" target="_blank" class="text-decoration-underline text-info">
+            building Web apps with ASP.NET Core
+        </a>.
+    </p>
+
+    <!-- رسائل نجاح/خطأ -->
+    @if (ViewBag.Success != null)
+    {
+        <div class="alert alert-success text-center">@ViewBag.Success</div>
+    }
+    else if (ViewBag.Error != null)
+    {
+        <div class="alert alert-danger text-center">@ViewBag.Error</div>
+    }
+
+    <!-- البحث -->
+    <div class="mb-4 text-center">
+        <input type="text" id="searchInput" class="form-control w-50 d-inline-block" placeholder="ابحث عن قارة..." />
+    </div>
+
+    <!-- Cards للقارات -->
+    <div class="row g-4 mb-5" id="continentCards">
+        @foreach (var ct in continents)
+        {
+            <div class="col-md-4 continent-card">
+                <div class="card h-100 shadow rounded-4 dark-card">
+                    <img src="~/@ct.PhotoUrl" class="card-img-top continent-img" alt="@ct.Name photo" />
+                    <div class="card-body d-flex flex-column">
+                        <h5 class="card-title text-light">@ct.Name</h5>
+                        <p class="card-text flex-grow-1 text-light">@ct.Description</p>
+                        <p class="text-light mb-1"><strong>عدد الدول:</strong> @ct.CountryCount</p>
+                        <p class="text-light mb-1"><strong>المساحة:</strong> @ct.Area km²</p>
+                        <p class="text-light mb-1"><strong>عدد السكان:</strong> @ct.Population</p>
+                        <span class="mt-3 btn @(ct.IsInhabited ? "btn-success" : "btn-danger") btn-lg shadow-sm">
+                            @(ct.IsInhabited ? "Safe" : "Unsafe")
+                        </span>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    <!-- Admin Panel -->
+    <h2 class="mb-3 text-center text-light">Admin Panel - Manage Continents</h2>
+    <div class="text-center mb-4">
+        <a href="@Url.Action("AddNewContinent", "Home")" class="btn btn-primary btn-lg shadow">Add New Continent</a>
+    </div>
+
+    <!-- جدول الإدارة -->
+    <div class="table-responsive shadow-sm rounded-4 border">
+        <table class="table table-bordered mb-0" id="continentTable" style="background-color:white; color:#212529;">
+            <thead class="text-center" style="background-color:white; color:#212529;">
+                <tr>
+                    <th>ID</th>
+                    <th>Continent Name</th>
+                    <th>Description</th>
+                    <th>Photo</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody class="text-center" style="background-color:white; color:#212529;">
+                @foreach (var ct in continents)
+                {
+                    var currentModalId = "modal" + modalIndex;
+                    var currentModalIdLabel = currentModalId + "Label";
+                    modalIndex++;
+                    <tr class="continent-row">
+                        <td>@ct.Id</td>
+                        <td>@ct.Name</td>
+                        <td class="text-truncate" style="max-width:200px;">@ct.Description</td>
+                        <td>
+                            <img src="~/@ct.PhotoUrl" width="100" height="100" class="rounded-2" style="object-fit:cover;" />
+                        </td>
+                        <td>
+                            <span class="fw-bold @(ct.IsInhabited ? "text-success" : "text-danger")">
+                                @(ct.IsInhabited ? "Safe" : "Unsafe")
+                            </span>
+                        </td>
+                        <td>
+                            <div class="d-flex justify-content-center gap-2">
+                                <a asp-controller="Home" asp-action="EditContinent" asp-route-Continent_Id="@ct.Id"
+                                   class="btn btn-warning btn-sm px-3 py-1">Edit</a>
+
+                                <form asp-controller="Home" asp-action="DeleteContinent" method="post"
+                                      onsubmit="return confirm('هل أنت متأكد من حذف القارة @ct.Name؟');">
+                                    <input type="hidden" name="id" value="@ct.Id" />
+                                    <button type="submit" class="btn btn-danger btn-sm px-3 py-1">Delete</button>
+                                </form>
+
+                                <button type="button" class="btn btn-info btn-sm px-3 py-1" data-bs-toggle="modal" data-bs-target="#@currentModalId">View</button>
+                            </div>
+
+                            <!-- View Modal -->
+                            <div class="modal fade" id="@currentModalId" tabindex="-1" aria-labelledby="@currentModalIdLabel" aria-hidden="true">
+                                <div class="modal-dialog modal-dialog-centered modal-lg">
+                                    <div class="modal-content rounded-4 shadow-lg">
+                                        <div class="modal-header bg-primary text-white rounded-top-4">
+                                            <h5 class="modal-title" id="@currentModalIdLabel">@ct.Name Details</h5>
+                                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                        </div>
+                                        <div class="modal-body text-center">
+                                            <img src="~/@ct.PhotoUrl" class="img-fluid mb-3 rounded-3" style="max-height:300px; object-fit:cover;" />
+                                            <p>@ct.Description</p>
+                                            <p>
+                                                <strong>Status:</strong>
+                                                <span class="fw-bold @(ct.IsInhabited ? "text-success" : "text-danger")">
+                                                    @(ct.IsInhabited ? "Safe" : "Unsafe")
+                                                </span>
+                                            </p>
+                                            <p><strong>عدد الدول:</strong> @ct.CountryCount</p>
+                                            <p><strong>المساحة:</strong> @ct.Area km²</p>
+                                            <p><strong>عدد السكان:</strong> @ct.Population</p>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary rounded-3" data-bs-dismiss="modal">Close</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<style>
+    /* خلفية ديناميكية مع blur وbrightness */
+    body::before {
+        content: "";
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: url('/Photo/earth-globe.jpg') no-repeat center center/cover;
+        filter: blur(6px) brightness(0.5);
+        z-index: -2;
+        animation: rotateBg 200s linear infinite;
+    }
+
+    body::after {
+        content: "";
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.01);
+        z-index: -1;
+    }
+
+
+
+    {
+        transform: rotate(0deg) scale(1);
+    }
+
+    100% {
+        transform: rotate(360deg) scale(1);
+    }
+
+    }
+
+    /* تأثير رفع البطاقات عند hover */
+    .continent-card .card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+        .continent-card .card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+        }
+
+    /* تأثير رفع الأزرار عند hover */
+    .btn {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 10px rgba(0,0,0,0.2);
+        }
+</style>
+
+@section Scripts
+{
+    <script>
+        // بحث مباشر في الجدول
+        document.getElementById('searchInput').addEventListener('keyup', function() {
+            var filter = this.value.toLowerCase();
+            document.querySelectorAll('#continentTable .continent-row').forEach(function(row) {
+                var name = row.cells[1].textContent.toLowerCase();
+                row.style.display = name.includes(filter) ? '' : 'none';
+            });
+        });
+    </script>
+}
+
+
+
+
+
+
+@* @using WebApplication4.Models
+@{
+    List<Continent> continents = ViewBag.continents;
+    int modalIndex = 0;
+}
+
+<div class="container mt-5">
+    <h1 class="display-4 text-center mb-3 text-light">🌍 قائمة القارات</h1>
+    <p class="text-center mb-5 text-light">
+        Learn about
+        <a href="https://learn.microsoft.com/aspnet/core" target="_blank" class="text-decoration-underline text-info">
+            building Web apps with ASP.NET Core
+        </a>.
+    </p>
+
+    <!-- رسالة النجاح أو الخطأ -->
+    @if (ViewBag.Success != null)
+    {
+        <div class="alert alert-success text-center">@ViewBag.Success</div>
+    }
+    else if (ViewBag.Error != null)
+    {
+        <div class="alert alert-danger text-center">@ViewBag.Error</div>
+    }
+
+    <!-- البحث -->
+    <div class="mb-4 text-center">
+        <input type="text" id="searchInput" class="form-control w-50 d-inline-block" placeholder="ابحث عن قارة..." />
+    </div>
+
+    <!-- Cards للقارات -->
+    <div class="row g-4 mb-5" id="continentCards">
+        @foreach (var ct in continents)
+        {
+            <div class="col-md-4 continent-card">
+                <div class="card h-100 shadow rounded-4 dark-card">
+                    <img src="~/@ct.PhotoUrl" class="card-img-top continent-img" alt="@ct.Name photo" />
+                    <div class="card-body d-flex flex-column">
+                        <h5 class="card-title text-light">@ct.Name</h5>
+                        <p class="card-text flex-grow-1 text-light">@ct.Description</p>
+                        <p class="text-light mb-1"><strong>عدد الدول:</strong> @ct.CountryCount</p>
+                        <p class="text-light mb-1"><strong>المساحة:</strong> @ct.Area km²</p>
+                        <p class="text-light mb-1"><strong>عدد السكان:</strong> @ct.Population</p>
+                        <span class="mt-3 btn @(ct.IsInhabited ? "btn-success" : "btn-danger") btn-lg shadow-sm">
+                            @(ct.IsInhabited ? "Safe" : "Unsafe")
+                        </span>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    <!-- Admin Panel -->
+    <h2 class="mb-3 text-center text-light">Admin Panel - Manage Continents</h2>
+    <div class="text-center mb-4">
+        <a href="@Url.Action("AddNewContinent", "Home")" class="btn btn-primary btn-lg shadow">Add New Continent</a>
+    </div>
+
+    <!-- جدول الإدارة -->
+    <div class="table-responsive shadow-sm rounded-4 border">
+        <table class="table table-bordered mb-0" id="continentTable" style="background-color:white; color:#212529;">
+            <thead class="text-center" style="background-color:white; color:#212529;">
+                <tr>
+                    <th>ID</th>
+                    <th>Continent Name</th>
+                    <th>Description</th>
+                    <th>Photo</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody class="text-center" style="background-color:white; color:#212529;">
+                @foreach (var ct in continents)
+                {
+                    var currentModalId = "modal" + modalIndex;
+                    var currentModalIdLabel = currentModalId + "Label";
+                    modalIndex++;
+                    <tr class="continent-row">
+                        <td>@ct.Id</td>
+                        <td>@ct.Name</td>
+                        <td class="text-truncate" style="max-width:200px;">@ct.Description</td>
+                        <td>
+                            <img src="~/@ct.PhotoUrl" width="100" height="100" class="rounded-2" style="object-fit:cover;" />
+                        </td>
+                        <td>
+                            <span class="fw-bold @(ct.IsInhabited ? "text-success" : "text-danger")">
+                                @(ct.IsInhabited ? "Safe" : "Unsafe")
+                            </span>
+                        </td>
+                        <td>
+                            <div class="d-flex justify-content-center gap-2">
+                                <a asp-controller="Home" asp-action="EditContinent" asp-route-Continent_Id="@ct.Id"
+                                   class="btn btn-warning btn-sm px-3 py-1">Edit</a>
+
+                                <form asp-controller="Home" asp-action="DeleteContinent" method="post"
+                                      onsubmit="return confirm('هل أنت متأكد من حذف القارة @ct.Name؟');">
+                                    <input type="hidden" name="id" value="@ct.Id" />
+                                    <button type="submit" class="btn btn-danger btn-sm px-3 py-1">Delete</button>
+                                </form>
+
+                                <button type="button" class="btn btn-info btn-sm px-3 py-1" data-bs-toggle="modal" data-bs-target="#@currentModalId">View</button>
+                            </div>
+
+                            <!-- View Modal -->
+                            <div class="modal fade" id="@currentModalId" tabindex="-1" aria-labelledby="@currentModalIdLabel" aria-hidden="true">
+                                <div class="modal-dialog modal-dialog-centered modal-lg">
+                                    <div class="modal-content rounded-4 shadow-lg">
+                                        <div class="modal-header bg-primary text-white rounded-top-4">
+                                            <h5 class="modal-title" id="@currentModalIdLabel">@ct.Name Details</h5>
+                                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                        </div>
+                                        <div class="modal-body text-center">
+                                            <img src="~/@ct.PhotoUrl" class="img-fluid mb-3 rounded-3" style="max-height:300px; object-fit:cover;" />
+                                            <p>@ct.Description</p>
+                                            <p>
+                                                <strong>Status:</strong>
+                                                <span class="fw-bold @(ct.IsInhabited ? "text-success" : "text-danger")">
+                                                    @(ct.IsInhabited ? "Safe" : "Unsafe")
+                                                </span>
+                                            </p>
+                                            <p><strong>عدد الدول:</strong> @ct.CountryCount</p>
+                                            <p><strong>المساحة:</strong> @ct.Area km²</p>
+                                            <p><strong>عدد السكان:</strong> @ct.Population</p>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary rounded-3" data-bs-dismiss="modal">Close</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<style>
+    /* تأثير رفع البطاقات عند hover */
+    .continent-card .card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+        .continent-card .card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+        }
+
+    /* تأثير رفع الأزرار عند hover */
+    .btn {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 10px rgba(0,0,0,0.2);
+        }
+</style>
+
+@section Scripts
+{
+    <script>
+        // بحث مباشر في الجدول
+        document.getElementById('searchInput').addEventListener('keyup', function() {
+            var filter = this.value.toLowerCase();
+            document.querySelectorAll('#continentTable .continent-row').forEach(function(row) {
+                var name = row.cells[1].textContent.toLowerCase();
+                row.style.display = name.includes(filter) ? '' : 'none';
+            });
+        });
+    </script>
+}
+
+
+
+ *@

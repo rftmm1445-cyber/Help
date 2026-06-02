@@ -1,0 +1,181 @@
+﻿@* @using Microsoft.AspNetCore.Http
+@inject IHttpContextAccessor HttpContextAccessor
+@{
+    // جلب اسم المستخدم من الجلسة (Session)
+    string username = HttpContextAccessor.HttpContext.Session.GetString("Username");
+    WebApplication4.Models.Player currentPlayer = null;
+
+    // إذا كان اللاعب مسجلاً دخوله بالفعل، نقوم بجلب بياناته الحية لتعرض في الشريط العلوي لكل الصفحات
+    if (!string.IsNullOrEmpty(username))
+    {
+        currentPlayer = WebApplication4.Models.Player.GetPlayerByUsername(username);
+    }
+}
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - GeoGame</title>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css" />
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" />
+
+    <style>
+        /* توحيد الخلفية العامة للعبة باللون الداكن الفخم لمنع الوميض الأبيض */
+        body {
+            background-color: #1a1a2e !important;
+            color: #ffffff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        /* تنسيق شريط التنقل العلوي باللون الكحلي الداكن المبطن بحد ذهبي */
+        .custom-navbar {
+            background-color: #162447 !important;
+            border-bottom: 2px solid #fca311 !important;
+        }
+
+        .nav-link {
+            color: rgba(255, 255, 255, 0.85) !important;
+            font-weight: 600;
+        }
+
+            .nav-link:hover {
+                color: #fca311 !important;
+            }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar navbar-expand-lg navbar-dark custom-navbar mb-4 shadow">
+        <div class="container">
+            <a class="navbar-brand fw-bold text-warning" href="/"><i class="fa-solid fa-earth-americas"></i> GeoGame</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" asp-controller="Gameround" asp-action="Index"><i class="fa-solid fa-map-location-dot"></i> خريطة اللعب</a>
+                    </li>
+                </ul>
+
+                <ul class="navbar-nav ms-auto align-items-center">
+                    @if (currentPlayer != null)
+                    {
+                        <li class="nav-item me-3">
+                            <span class="badge bg-dark border border-warning text-warning p-2 fs-6">
+                                ⚡ النقاط: <span id="navScore">@currentPlayer.Score</span>
+                            </span>
+                        </li>
+                        <li class="nav-item me-3">
+                            <span class="badge bg-success p-2 fs-6">
+                                💠 المستوى: <span id="navLevel">@currentPlayer.pLevel</span>
+                            </span>
+                        </li>
+                        <li class="nav-item me-2">
+                            <span class="text-light fw-bold"><i class="fa-solid fa-user-astronaut text-info"></i> @currentPlayer.Username</span>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-danger" asp-controller="Account" asp-action="Logout"><i class="fa-solid fa-power-off"></i> خروج</a>
+                        </li>
+                    }
+                    else
+                    {
+                        <li class="nav-item">
+                            <a class="nav-link text-warning" asp-controller="Account" asp-action="Login"><i class="fa-solid fa-lock"></i> دخول اللاعبين</a>
+                        </li>
+                    }
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container">
+        @RenderBody()
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>
+
+ *@
+
+
+@{
+    var title = ViewData["Title"] ?? "WebApplication4";
+}
+
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@title - WebApplication4</title>
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+
+    <!-- Project CSS -->
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body>
+    <header>
+        <nav class="navbar navbar-expand-lg navbar-light bg-light border-bottom mb-3 shadow-sm">
+            <div class="container-fluid">
+                <a class="navbar-brand fw-bold" asp-controller="Home" asp-action="Index">WebApplication4</a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                        aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="Home" asp-action="Index">🏠 الرئيسية</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="Home" asp-action="ShowContinents">🌍 إدارة القارات</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="Country" asp-action="Index">🏙️ إدارة الدول</a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="Account" asp-action="Login">📝 إنشاء حساب</a>
+                        </li>
+
+
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <div class="container mt-4">
+        <main role="main" class="pb-3">
+            @RenderBody()
+        </main>
+    </div>
+
+    <footer class="border-top footer text-muted mt-4 py-3 bg-light">
+        <div class="container text-center">
+            &copy; 1447 - WebApplication4
+        </div>
+    </footer>
+
+    <!-- JS -->
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+
+    <!-- Optional Scripts Section -->
+    @if (IsSectionDefined("Scripts"))
+    {
+        @RenderSection("Scripts")
+    }
+</body>
+</html>
