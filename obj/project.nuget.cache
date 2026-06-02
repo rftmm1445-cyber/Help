@@ -1,0 +1,15 @@
+{
+  "version": 2,
+  "dgSpecHash": "lIrwCL6pUHQ=",
+  "success": true,
+  "projectFilePath": "C:\\Users\\user\\Desktop\\WebApplication4\\WebApplication4\\WebApplication4.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\user\\.nuget\\packages\\system.configuration.configurationmanager\\10.0.0\\system.configuration.configurationmanager.10.0.0.nupkg.sha512",
+    "C:\\Users\\user\\.nuget\\packages\\system.data.oledb\\10.0.0\\system.data.oledb.10.0.0.nupkg.sha512",
+    "C:\\Users\\user\\.nuget\\packages\\system.diagnostics.eventlog\\10.0.0\\system.diagnostics.eventlog.10.0.0.nupkg.sha512",
+    "C:\\Users\\user\\.nuget\\packages\\system.diagnostics.performancecounter\\10.0.0\\system.diagnostics.performancecounter.10.0.0.nupkg.sha512",
+    "C:\\Users\\user\\.nuget\\packages\\system.security.cryptography.protecteddata\\10.0.0\\system.security.cryptography.protecteddata.10.0.0.nupkg.sha512",
+    "C:\\Users\\user\\.nuget\\packages\\system.threading.accesscontrol\\10.0.0\\system.threading.accesscontrol.10.0.0.nupkg.sha512"
+  ],
+  "logs": []
+}
